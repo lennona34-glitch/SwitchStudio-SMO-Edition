@@ -77,7 +77,7 @@ Double-click **`start_studio.bat`** or run:
 ```powershell
 python -X utf8 server.py
 ```
-Then open **[http://127.0.0.1:8765](http://127.0.0.1:8765)** in your browser.
+Then open **[http://localhost:5050](http://localhost:5050)** in your browser.
 
 ---
 
@@ -85,7 +85,7 @@ Then open **[http://127.0.0.1:8765](http://127.0.0.1:8765)** in your browser.
 
 ```text
 switch_studio/
-├── server.py               # HTTP API & static asset server (port 8765)
+├── server.py               # HTTP API & static asset server (port 5050)
 ├── start_studio.bat        # One-click Windows launcher
 ├── requirements.txt        # Python dependencies (oead, Pillow, numpy, scipy, psutil)
 ├── track_specs.json        # Exact channel & sample-rate metadata for all 130 BGM streams

@@ -1976,12 +1976,12 @@ class SwitchEngine:
             "name": "Yoshi Star Kingdom (Super Mario Galaxy 2 Remastered)",
             "author": "MasterJ360 & Galaxy Team",
             "category": "3D Kingdom Overhaul",
-            "replaces": "Mushroom Kingdom (Peach's Castle)",
+            "replaces": "Cascade Kingdom (Direct QuickMoon Boot)",
             "size_mb": 100.7,
             "likes": 142,
             "views": 48500,
-            "thumb": "https://images.gamebanana.com/img/ss/mods/6575c7fd43d59.jpg",
-            "how_to_play": "Fly the Odyssey to the Mushroom Kingdom (Peach's Castle) — you'll land directly inside Super Mario Galaxy 2's Yoshi Star Galaxy with custom 3D planets, Launch Stars, Pull Stars, and 48kHz Galaxy music!",
+            "thumb": "thumbs/yoshi_star.jpg",
+            "how_to_play": "Just click Launch Eden and press Resume / Start! QuickMoon loads you straight into Super Mario Galaxy 2's Yoshi Star Galaxy (with a separate save at switch/qm-save/remaster-ysk/ so your 100% Odyssey save stays safe!).",
             "description": "Full 3D level geometry & texture port of Super Mario Galaxy 2's Yoshi Star Galaxy into Super Mario Odyssey! Features custom 3D planetoids, Lava & Spiny Planets, Pull Stars, Launch Stars, custom skybox, and 8 Galaxy soundtrack streams."
         },
         {
@@ -1994,7 +1994,7 @@ class SwitchEngine:
             "size_mb": 438.4,
             "likes": 95,
             "views": 29400,
-            "thumb": "https://images.gamebanana.com/img/ss/mods/6317b5fe87ab6.jpg",
+            "thumb": "thumbs/recreating_textures.jpg",
             "how_to_play": "Automatically repaints level & environment textures across almost every kingdom in the game.",
             "description": "Massive community artwork overhaul that repaints the environment, ground, walls, and object textures across Cap, Cascade, Sand, Metro, Luncheon, Mushroom, and Moon Kingdoms."
         },
@@ -2008,7 +2008,7 @@ class SwitchEngine:
             "size_mb": 16.0,
             "likes": 78,
             "views": 18200,
-            "thumb": "https://images.gamebanana.com/img/ss/mods/67eb2dc5b3ca6.jpg",
+            "thumb": "thumbs/fluffy_bluff.jpg",
             "how_to_play": "Warp to the Cloud Kingdom on the Odyssey Globe to explore Fluffy Bluff Galaxy!",
             "description": "Transforms the Cloud Kingdom into Super Mario Galaxy 2's Fluffy Bluff Galaxy with custom 3D cloud towers, trees, cosmic platforms, and Galaxy music."
         },
@@ -2022,7 +2022,7 @@ class SwitchEngine:
             "size_mb": 162.8,
             "likes": 110,
             "views": 31000,
-            "thumb": "https://images.gamebanana.com/img/ss/mods/6575c7fd43d59.jpg",
+            "thumb": "thumbs/wuhu_kingdom.jpg",
             "how_to_play": "Warp to the Mushroom Kingdom to explore the entire 3D Wuhu Island from Wii Sports Resort!",
             "description": "Brings the iconic Wuhu Island from Wii Sports Resort into Super Mario Odyssey with custom Power Moons, volcano, town, and beach resort."
         },
@@ -2036,7 +2036,7 @@ class SwitchEngine:
             "size_mb": 256.4,
             "likes": 89,
             "views": 24100,
-            "thumb": "https://images.gamebanana.com/img/ss/mods/62f18a93c5e12.jpg",
+            "thumb": "thumbs/kingdom_pass.jpg",
             "how_to_play": "Adds custom 3D challenge stages and moons across multiple kingdoms.",
             "description": "Community expansion pack featuring custom 3D platforming courses, new textures, and custom Power Moons."
         }

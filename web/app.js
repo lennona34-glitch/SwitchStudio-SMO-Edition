@@ -2654,7 +2654,7 @@ function renderCommunityGrid() {
     list.forEach(pack => {
         const card = document.createElement("div");
         card.className = `community-pack-card ${pack.enabled ? "pack-active" : ""}`;
-        const thumbUrl = pack.thumb || "https://images.gamebanana.com/img/ss/mods/6575c7fd43d59.jpg";
+        const thumbUrl = pack.thumb || "thumbs/yoshi_star.jpg";
         const statusChip = pack.enabled
             ? `<span class="pack-status-chip active">● ACTIVE IN EDEN</span>`
             : (pack.installed ? `<span class="pack-status-chip installed">INSTALLED (OFF)</span>` : `<span class="pack-status-chip">GAMEBANANA #${pack.gb_id}</span>`);
@@ -2680,7 +2680,7 @@ function renderCommunityGrid() {
 
         card.innerHTML = `
             <div class="pack-thumb-wrap">
-                <img src="${thumbUrl}" alt="${pack.name}" loading="lazy">
+                <img src="${thumbUrl}" alt="${pack.name}" loading="lazy" onerror="this.onerror=null;this.src='thumbs/yoshi_star.jpg';">
                 <span class="pack-cat-tag">${pack.category || "Mod Pack"}</span>
                 ${statusChip}
             </div>
