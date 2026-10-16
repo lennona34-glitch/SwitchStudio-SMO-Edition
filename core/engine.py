@@ -2160,7 +2160,7 @@ class SwitchEngine:
                         yinfo = bfstm_nx._parse(f.read(0x4000))
                     with open(vp, "rb") as f:
                         vinfo = bfstm_nx._parse(f.read(0x4000))
-                    if yinfo["channels"] != vinfo["channels"] or yinfo["rate"] != vinfo["rate"] or yinfo["order"] != "<":
+                    if yinfo["channels"] != vinfo["channels"] or yinfo["rate"] != vinfo["rate"] or yinfo.get("endian", "<") != "<":
                         tmp_wav = os.path.join(CACHE_DIR, f"pack_tmp_{fn}.wav")
                         clean_wav = os.path.join(CACHE_DIR, f"pack_clean_{fn}.wav")
                         tmp_bfstm = os.path.join(CACHE_DIR, f"pack_out_{fn}")
@@ -2173,6 +2173,24 @@ class SwitchEngine:
                         self._finalize_bfstm(fp, fn, sfx=False)
                 except Exception as e:
                     print(f"Warning normalizing {fn}: {e}")
+
+        # 2b. If this is a 3D Kingdom Overhaul pack, move any bundled Mario.szs / MarioFace.szs / MarioHeadTexture.szs
+        # aside so they never override the user's custom ClaraMarioReshaped face, outfit, or Tiny/Giant Mario scale.
+        if os.path.isdir(os.path.join(pack_dir, "romfs", "StageData")):
+            obj_dir = os.path.join(pack_dir, "romfs", "ObjectData")
+            skip_dir = os.path.join(pack_dir, "romfs", "_skipped_mario_models")
+            protected_mario = {
+                "Mario.szs", "MarioHigh.szs", "MarioFace.szs", "MarioHighFace.szs",
+                "MarioEye.szs", "MarioHighEye.szs", "MarioHead.szs", "MarioHighHead.szs",
+                "MarioHeadTexture.szs", "MarioCap.szs", "MarioHighCap.szs", "MarioCapTexture.szs",
+                "MarioUnder.szs", "MarioHandL.szs", "MarioHandR.szs", "MarioHandTexture.szs"
+            }
+            if os.path.isdir(obj_dir):
+                for mfn in protected_mario:
+                    mp = os.path.join(obj_dir, mfn)
+                    if os.path.isfile(mp):
+                        os.makedirs(skip_dir, exist_ok=True)
+                        shutil.move(mp, os.path.join(skip_dir, mfn))
 
         # 3. Normalize SystemData/WorldList.szs so v1.3.0 WorldResource.byml & WorldList.byml do not overflow WorldResourceHeap on v1.0.0
         wl_mod_path = os.path.join(pack_dir, "romfs", "SystemData", "WorldList.szs")
@@ -2333,6 +2351,32 @@ class SwitchEngine:
             })
         return results
 
+    def _disable_other_kingdom_packs(self, target_pack_id):
+        """Automatically disables any other active 3D Kingdom Overhaul pack so WorldList.szs / ShineInfo.szs / exefs never conflict."""
+        disabled_names = []
+        if not os.path.isdir(EDEN_LOAD_DIR):
+            return disabled_names
+        dis_root = self._eden_disabled_dir()
+        for dname in sorted(os.listdir(EDEN_LOAD_DIR)):
+            if dname in (target_pack_id, self.active_mod_name, "LunaKit", "Cheats"):
+                continue
+            src_p = os.path.join(EDEN_LOAD_DIR, dname)
+            if not os.path.isdir(src_p):
+                continue
+            # Check if it's a kingdom overhaul (has StageData, SystemData, or exefs)
+            has_stage = os.path.isdir(os.path.join(src_p, "romfs", "StageData")) or os.path.isdir(os.path.join(src_p, "romfs", "SystemData")) or os.path.isdir(os.path.join(src_p, "exefs"))
+            if has_stage:
+                dst_p = os.path.join(dis_root, dname)
+                if os.path.isdir(dst_p):
+                    shutil.rmtree(dst_p)
+                shutil.move(src_p, dst_p)
+                self._sync_pack_audio_and_exefs(dname, False)
+                disabled_names.append(dname)
+        return disabled_names
+
+    def get_download_progress(self):
+        return getattr(self, "_dl_progress", {"active": False, "pack_id": "", "downloaded_mb": 0.0, "total_mb": 0.0, "percent": 0, "stage": ""})
+
     def toggle_community_pack(self, pack_id, enabled):
         active_path = os.path.join(EDEN_LOAD_DIR, pack_id)
         dis_path = os.path.join(self._eden_disabled_dir(), pack_id)
@@ -2343,8 +2387,12 @@ class SwitchEngine:
                 shutil.move(dis_path, active_path)
             elif not os.path.isdir(active_path):
                 raise FileNotFoundError(f"Pack '{pack_id}' is not installed yet.")
+            # If this pack is a 3D Kingdom Overhaul, auto-disable other active kingdom overhauls so they don't collide
+            is_kingdom = os.path.isdir(os.path.join(active_path, "romfs", "StageData")) or os.path.isdir(os.path.join(active_path, "romfs", "SystemData")) or os.path.isdir(os.path.join(active_path, "exefs"))
+            auto_off = self._disable_other_kingdom_packs(pack_id) if is_kingdom else []
             self._sync_pack_audio_and_exefs(pack_id, True)
-            return {"success": True, "id": pack_id, "enabled": True, "message": f"Enabled '{pack_id}' in Eden! (Audio prefetch & custom face/music synced)"}
+            extra_note = f" (Auto-disabled {', '.join(auto_off)} to prevent kingdom conflicts)" if auto_off else ""
+            return {"success": True, "id": pack_id, "enabled": True, "message": f"Enabled '{pack_id}' in Eden!{extra_note}"}
         else:
             if os.path.isdir(active_path):
                 if os.path.isdir(dis_path):
@@ -2390,70 +2438,109 @@ class SwitchEngine:
 
         dl_url = chosen_file.get("_sDownloadUrl")
         fname = chosen_file.get("_sFile") or f"mod_{gb_id}.zip"
+        expected_bytes = int(chosen_file.get("_nFilesize") or 0)
         archive_path = os.path.join(self._community_cache_dir(), fname)
 
-        if not os.path.isfile(archive_path) or os.path.getsize(archive_path) < 1024:
-            dl_req = urllib.request.Request(dl_url, headers={"User-Agent": "SwitchStudio/2.0"})
-            with urllib.request.urlopen(dl_req, timeout=180) as r, open(archive_path, "wb") as out_f:
-                shutil.copyfileobj(r, out_f, length=1024 * 1024)
+        try:
+            if not os.path.isfile(archive_path) or (expected_bytes > 0 and os.path.getsize(archive_path) < expected_bytes):
+                dl_req = urllib.request.Request(dl_url, headers={"User-Agent": "SwitchStudio/2.0"})
+                with urllib.request.urlopen(dl_req, timeout=600) as r, open(archive_path, "wb") as out_f:
+                    total_b = expected_bytes or int(r.headers.get("Content-Length") or 0)
+                    got_b = 0
+                    while True:
+                        chunk = r.read(256 * 1024)
+                        if not chunk:
+                            break
+                        out_f.write(chunk)
+                        got_b += len(chunk)
+                        pct = int(round((got_b / total_b) * 100)) if total_b > 0 else 0
+                        self._dl_progress = {
+                            "active": True,
+                            "pack_id": pack_id,
+                            "downloaded_mb": round(got_b / (1024 * 1024), 1),
+                            "total_mb": round(total_b / (1024 * 1024), 1),
+                            "percent": min(99, pct),
+                            "stage": "downloading"
+                        }
 
-        # Extract archive to temporary staging directory
-        stage_dir = os.path.join(self._community_cache_dir(), f"_stage_{pack_id}")
-        if os.path.isdir(stage_dir):
-            shutil.rmtree(stage_dir)
-        os.makedirs(stage_dir, exist_ok=True)
+            self._dl_progress = {
+                "active": True,
+                "pack_id": pack_id,
+                "downloaded_mb": round(os.path.getsize(archive_path) / (1024 * 1024), 1),
+                "total_mb": round(os.path.getsize(archive_path) / (1024 * 1024), 1),
+                "percent": 100,
+                "stage": "extracting"
+            }
 
-        lower_fn = fname.lower()
-        if lower_fn.endswith(".zip"):
-            with zipfile.ZipFile(archive_path, "r") as zf:
-                zf.extractall(stage_dir)
-        else:
-            # Try 7z or tar (Windows 10/11 built-in bsdtar supports .zip, .rar, .7z, .tar)
-            seven_z = r"C:\Program Files\7-Zip\7z.exe"
-            if os.path.isfile(seven_z):
-                subprocess.run([seven_z, "x", archive_path, f"-o{stage_dir}", "-y"], check=True)
+            # Extract archive to temporary staging directory
+            stage_dir = os.path.join(self._community_cache_dir(), f"_stage_{pack_id}")
+            if os.path.isdir(stage_dir):
+                shutil.rmtree(stage_dir)
+            os.makedirs(stage_dir, exist_ok=True)
+
+            lower_fn = fname.lower()
+            if lower_fn.endswith(".zip"):
+                with zipfile.ZipFile(archive_path, "r") as zf:
+                    zf.extractall(stage_dir)
             else:
-                subprocess.run(["tar", "-xf", archive_path, "-C", stage_dir], check=True)
+                seven_z = r"C:\Program Files\7-Zip\7z.exe"
+                if os.path.isfile(seven_z):
+                    subprocess.run([seven_z, "x", archive_path, f"-o{stage_dir}", "-y"], check=True)
+                else:
+                    subprocess.run(["tar", "-xf", archive_path, "-C", stage_dir], check=True)
 
-        # Locate romfs/exefs root inside stage_dir
-        os.makedirs(active_path, exist_ok=True)
-        found_root = None
-        for root, dirs, _ in os.walk(stage_dir):
-            dlow = {d.lower(): d for d in dirs}
-            if "romfs" in dlow or "exefs" in dlow:
-                found_root = root
-                break
-            if "objectdata" in dlow or "stagedata" in dlow or "sounddata" in dlow:
-                # Archive directly contains romfs subdirectories
-                romfs_dst = os.path.join(active_path, "romfs")
-                os.makedirs(romfs_dst, exist_ok=True)
-                for item in os.listdir(root):
-                    shutil.move(os.path.join(root, item), os.path.join(romfs_dst, item))
-                found_root = active_path
-                break
+            # Locate romfs/exefs root inside stage_dir
+            os.makedirs(active_path, exist_ok=True)
+            found_root = None
+            for root, dirs, _ in os.walk(stage_dir):
+                dlow = {d.lower(): d for d in dirs}
+                if "romfs" in dlow or "exefs" in dlow:
+                    found_root = root
+                    break
+                if "objectdata" in dlow or "stagedata" in dlow or "sounddata" in dlow:
+                    romfs_dst = os.path.join(active_path, "romfs")
+                    os.makedirs(romfs_dst, exist_ok=True)
+                    for item in os.listdir(root):
+                        shutil.move(os.path.join(root, item), os.path.join(romfs_dst, item))
+                    found_root = active_path
+                    break
 
-        if found_root and found_root != active_path:
-            for item in os.listdir(found_root):
-                dst_item = os.path.join(active_path, item.lower() if item.lower() in ("romfs", "exefs") else item)
-                if os.path.exists(dst_item):
-                    if os.path.isdir(dst_item):
-                        shutil.rmtree(dst_item)
-                    else:
-                        os.remove(dst_item)
-                shutil.move(os.path.join(found_root, item), dst_item)
+            if found_root and found_root != active_path:
+                for item in os.listdir(found_root):
+                    dst_item = os.path.join(active_path, item.lower() if item.lower() in ("romfs", "exefs") else item)
+                    if os.path.exists(dst_item):
+                        if os.path.isdir(dst_item):
+                            shutil.rmtree(dst_item)
+                        else:
+                            os.remove(dst_item)
+                    shutil.move(os.path.join(found_root, item), dst_item)
 
-        shutil.rmtree(stage_dir, ignore_errors=True)
+            shutil.rmtree(stage_dir, ignore_errors=True)
 
-        # Normalize for Switch v1.0.0 & sync audio prefetch
-        self._normalize_pack_for_v100(active_path)
-        self._sync_pack_audio_and_exefs(pack_id, True)
+            self._dl_progress = {
+                "active": True,
+                "pack_id": pack_id,
+                "downloaded_mb": round(os.path.getsize(archive_path) / (1024 * 1024), 1),
+                "total_mb": round(os.path.getsize(archive_path) / (1024 * 1024), 1),
+                "percent": 100,
+                "stage": "normalizing"
+            }
 
-        return {
-            "success": True,
-            "id": pack_id,
-            "gb_id": gb_id,
-            "enabled": True,
-            "installed": True,
-            "message": f"Downloaded, normalized & activated '{pack_id}' in Eden!"
-        }
+            # Normalize for Switch v1.0.0 & auto-disable other 3D Kingdom Overhauls
+            self._normalize_pack_for_v100(active_path)
+            is_kingdom = os.path.isdir(os.path.join(active_path, "romfs", "StageData")) or os.path.isdir(os.path.join(active_path, "romfs", "SystemData")) or os.path.isdir(os.path.join(active_path, "exefs"))
+            auto_off = self._disable_other_kingdom_packs(pack_id) if is_kingdom else []
+            self._sync_pack_audio_and_exefs(pack_id, True)
+            extra_note = f" (Auto-disabled {', '.join(auto_off)} so kingdoms don't conflict)" if auto_off else ""
+
+            return {
+                "success": True,
+                "id": pack_id,
+                "gb_id": gb_id,
+                "enabled": True,
+                "installed": True,
+                "message": f"Downloaded, normalized & activated '{pack_id}' in Eden!{extra_note}"
+            }
+        finally:
+            self._dl_progress = {"active": False, "pack_id": "", "downloaded_mb": 0.0, "total_mb": 0.0, "percent": 0, "stage": ""}
 

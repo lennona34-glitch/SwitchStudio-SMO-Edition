@@ -2751,6 +2751,24 @@ async function toggleCommunityPack(packId, enable) {
 
 async function installCommunityPack(gbId, packId, btnEl) {
     showToast(`⬇️ Downloading GameBanana Mod #${gbId} and normalizing for Switch v1.0.0...`);
+    let pollTimer = null;
+    if (btnEl) {
+        pollTimer = setInterval(async () => {
+            try {
+                const pr = await fetch("/api/community/progress");
+                const pd = await pr.json();
+                if (pd && pd.active && (!pd.pack_id || pd.pack_id === packId)) {
+                    if (pd.stage === "downloading" && pd.total_mb > 0) {
+                        btnEl.textContent = `⬇️ ${pd.downloaded_mb} / ${pd.total_mb} MB (${pd.percent}%)`;
+                    } else if (pd.stage === "extracting") {
+                        btnEl.textContent = `📦 Extracting Archive...`;
+                    } else if (pd.stage === "normalizing") {
+                        btnEl.textContent = `⚙️ Normalizing Audio & RomFS...`;
+                    }
+                }
+            } catch (_) {}
+        }, 800);
+    }
     try {
         const res = await fetch("/api/community/install", {
             method: "POST",
@@ -2758,6 +2776,7 @@ async function installCommunityPack(gbId, packId, btnEl) {
             body: JSON.stringify({ gb_id: Number(gbId), id: packId })
         });
         const data = await res.json();
+        if (pollTimer) clearInterval(pollTimer);
         if (data.success) {
             showToast(`🎉 ${data.message}`);
             await loadCommunityPacks();
@@ -2778,6 +2797,7 @@ async function installCommunityPack(gbId, packId, btnEl) {
             }
         }
     } catch (e) {
+        if (pollTimer) clearInterval(pollTimer);
         showToast("Download error: " + e.message);
         if (btnEl) {
             btnEl.disabled = false;

@@ -271,6 +271,10 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
                 self.send_json({"success": False, "error": str(e)}, code=500)
             return
 
+        elif path == "/api/community/progress":
+            self.send_json(engine.get_download_progress())
+            return
+
         # Static Assets
         if path == "/" or path == "":
             file_path = os.path.join(STATIC_DIR, "index.html")
