@@ -1,0 +1,652 @@
+{
+    "RsBgmBossMagma.fs.48.dspadpcm.bfstm":  {
+                                                "loop":  true,
+                                                "sample_rate":  48000,
+                                                "channels":  2
+                                            },
+    "RsBgmMiniGame01.fs.48.dspadpcm.bfstm":  {
+                                                 "loop":  true,
+                                                 "sample_rate":  48000,
+                                                 "channels":  2
+                                             },
+    "RsBgmDemoMeetCapFirstA.fs.48.dspadpcm.bfstm":  {
+                                                        "loop":  true,
+                                                        "sample_rate":  48000,
+                                                        "channels":  2
+                                                    },
+    "RsBgmSnowEnv006.fs.48.dspadpcm.bfstm":  {
+                                                 "loop":  false,
+                                                 "sample_rate":  48000,
+                                                 "channels":  2
+                                             },
+    "StmDesertWorld_009.bfstm":  {
+                                     "loop":  false,
+                                     "sample_rate":  48000,
+                                     "channels":  4
+                                 },
+    "RsBgmCitySessionAll.nk.48.dspadpcm.bfstm":  {
+                                                     "loop":  true,
+                                                     "sample_rate":  48000,
+                                                     "channels":  2
+                                                 },
+    "RsBgmCityScenario03JpRadio.nk.22.dspadpcm.bfstm":  {
+                                                            "loop":  true,
+                                                            "sample_rate":  22000,
+                                                            "channels":  1
+                                                        },
+    "RsBgmMoonChurch.fs.48.dspadpcm.bfstm":  {
+                                                 "loop":  true,
+                                                 "sample_rate":  48000,
+                                                 "channels":  2
+                                             },
+    "RsBgmSeSkyGKZone.sg.48.dspadpcm.bfstm":  {
+                                                  "loop":  true,
+                                                  "sample_rate":  48000,
+                                                  "channels":  2
+                                              },
+    "RsBgmSnow.fs.48.dspadpcm.bfstm":  {
+                                           "loop":  true,
+                                           "sample_rate":  48000,
+                                           "channels":  2
+                                       },
+    "StmRsBgmDesertMainParade.bfstm":  {
+                                           "loop":  true,
+                                           "sample_rate":  48000,
+                                           "channels":  6
+                                       },
+    "RsBgmSnowEnv002.fs.48.dspadpcm.bfstm":  {
+                                                 "loop":  false,
+                                                 "sample_rate":  48000,
+                                                 "channels":  2
+                                             },
+    "RsBgmSnowEnv008.fs.48.dspadpcm.bfstm":  {
+                                                 "loop":  false,
+                                                 "sample_rate":  48000,
+                                                 "channels":  2
+                                             },
+    "RsBgmRaceResult.fs.48.dspadpcm.bfstm":  {
+                                                 "loop":  true,
+                                                 "sample_rate":  48000,
+                                                 "channels":  2
+                                             },
+    "RsBgmBossHaikai_A.nk.48.dspadpcm.bfstm":  {
+                                                   "loop":  false,
+                                                   "sample_rate":  48000,
+                                                   "channels":  2
+                                               },
+    "RsBgmShop02.k.48.dspadpcm.bfstm":  {
+                                            "loop":  false,
+                                            "sample_rate":  48000,
+                                            "channels":  2
+                                        },
+    "RsBgmExChika2.nk.48.dspadpcm.bfstm":  {
+                                               "loop":  true,
+                                               "sample_rate":  48000,
+                                               "channels":  2
+                                           },
+    "RsBgmSnowEnv005.fs.48.dspadpcm.bfstm":  {
+                                                 "loop":  false,
+                                                 "sample_rate":  48000,
+                                                 "channels":  2
+                                             },
+    "RsBgmJgBossHaikaiAppear.nk.48.dspadpcm.bfstm":  {
+                                                         "loop":  false,
+                                                         "sample_rate":  48000,
+                                                         "channels":  2
+                                                     },
+    "StmRsBgmExAthletic02.bfstm":  {
+                                       "loop":  true,
+                                       "sample_rate":  48000,
+                                       "channels":  6
+                                   },
+    "StmRsBgmExRuin.bfstm":  {
+                                 "loop":  true,
+                                 "sample_rate":  48000,
+                                 "channels":  6
+                             },
+    "RsBgmExBonus.fs.48.dspadpcm.bfstm":  {
+                                              "loop":  true,
+                                              "sample_rate":  48000,
+                                              "channels":  2
+                                          },
+    "StmRsBgmBossForest.bfstm":  {
+                                     "loop":  true,
+                                     "sample_rate":  48000,
+                                     "channels":  8
+                                 },
+    "StmDesertWorld_014.bfstm":  {
+                                     "loop":  false,
+                                     "sample_rate":  48000,
+                                     "channels":  4
+                                 },
+    "RsBgmExAthletic.k.48.dspadpcm.bfstm":  {
+                                                "loop":  true,
+                                                "sample_rate":  48000,
+                                                "channels":  2
+                                            },
+    "RsBgmSnowTownRaceEntrance.fs.48.dspadpcm.bfstm":  {
+                                                           "loop":  true,
+                                                           "sample_rate":  48000,
+                                                           "channels":  2
+                                                       },
+    "StmDesertWorld_013.bfstm":  {
+                                     "loop":  false,
+                                     "sample_rate":  48000,
+                                     "channels":  4
+                                 },
+    "RsBgmShop01Radio_tmp.k.48.dspadpcm.bfstm":  {
+                                                     "loop":  true,
+                                                     "sample_rate":  48000,
+                                                     "channels":  1
+                                                 },
+    "RsBgmCityScenario03Clct.nk.48.dspadpcm.bfstm":  {
+                                                         "loop":  true,
+                                                         "sample_rate":  48000,
+                                                         "channels":  2
+                                                     },
+    "StmRsBgmSky01.bfstm":  {
+                                "loop":  true,
+                                "sample_rate":  48000,
+                                "channels":  4
+                            },
+    "RsBgmRadioControlCar.fs.48.dspadpcm.bfstm":  {
+                                                      "loop":  true,
+                                                      "sample_rate":  48000,
+                                                      "channels":  2
+                                                  },
+    "RsBgmShopClct.k.48.dspadpcm.bfstm":  {
+                                              "loop":  true,
+                                              "sample_rate":  48000,
+                                              "channels":  2
+                                          },
+    "RsBgmEndRockJp.nk.48.dspadpcm.bfstm":  {
+                                                "loop":  true,
+                                                "sample_rate":  48000,
+                                                "channels":  2
+                                            },
+    "RsBgmBeforeGK.nk.48.dspadpcm.bfstm":  {
+                                               "loop":  true,
+                                               "sample_rate":  48000,
+                                               "channels":  2
+                                           },
+    "StmRsBgmDemoWorldMap.bfstm":  {
+                                       "loop":  true,
+                                       "sample_rate":  48000,
+                                       "channels":  10
+                                   },
+    "RsbgmBossKnuckle.nk.48.dspadpcm.bfstm":  {
+                                                  "loop":  true,
+                                                  "sample_rate":  48000,
+                                                  "channels":  2
+                                              },
+    "RsBgmE3Title2.nk.48.dspadpcm.bfstm":  {
+                                               "loop":  true,
+                                               "sample_rate":  48000,
+                                               "channels":  2
+                                           },
+    "StmRsBgmBossDragon.bfstm":  {
+                                     "loop":  true,
+                                     "sample_rate":  48000,
+                                     "channels":  4
+                                 },
+    "StmRsBgmCityScenario03.bfstm":  {
+                                         "loop":  true,
+                                         "sample_rate":  48000,
+                                         "channels":  4
+                                     },
+    "StmRsBgmBossGolem.bfstm":  {
+                                    "loop":  true,
+                                    "sample_rate":  48000,
+                                    "channels":  8
+                                },
+    "RsBgmTitle.nk.48.dspadpcm.bfstm":  {
+                                            "loop":  true,
+                                            "sample_rate":  48000,
+                                            "channels":  2
+                                        },
+    "StmRsBgmDesertMain.bfstm":  {
+                                     "loop":  true,
+                                     "sample_rate":  48000,
+                                     "channels":  6
+                                 },
+    "RsBgmDinosaur.nk.48.dspadpcm.bfstm":  {
+                                               "loop":  true,
+                                               "sample_rate":  48000,
+                                               "channels":  2
+                                           },
+    "RsBgmDemoKoopaAppear_Ingame0598.nk.48.dspadpcm.bfstm":  {
+                                                                 "loop":  true,
+                                                                 "sample_rate":  48000,
+                                                                 "channels":  2
+                                                             },
+    "RsBgmM1PL.k.32.dspadpcm.bfstm":  {
+                                          "loop":  true,
+                                          "sample_rate":  48000,
+                                          "channels":  2
+                                      },
+    "RsBgmSea01beach.nk.22.dspadpcm.bfstm":  {
+                                                 "loop":  true,
+                                                 "sample_rate":  22000,
+                                                 "channels":  2
+                                             },
+    "StmRsBgmCityScenario02.bfstm":  {
+                                         "loop":  true,
+                                         "sample_rate":  48000,
+                                         "channels":  10
+                                     },
+    "RsBgmBossMofumofu.nk.48.dspadpcm.bfstm":  {
+                                                   "loop":  true,
+                                                   "sample_rate":  48000,
+                                                   "channels":  2
+                                               },
+    "RsBgmSnowEnv003.fs.48.dspadpcm.bfstm":  {
+                                                 "loop":  false,
+                                                 "sample_rate":  48000,
+                                                 "channels":  2
+                                             },
+    "StmRsBgmJaguar.bfstm":  {
+                                 "loop":  true,
+                                 "sample_rate":  48000,
+                                 "channels":  6
+                             },
+    "RsBgmSnowTownJingle.fs.32.dspadpcm.bfstm":  {
+                                                     "loop":  true,
+                                                     "sample_rate":  32000,
+                                                     "channels":  2
+                                                 },
+    "StmDesertWorld_003.bfstm":  {
+                                     "loop":  false,
+                                     "sample_rate":  48000,
+                                     "channels":  4
+                                 },
+    "StmDesertWorld_001.bfstm":  {
+                                     "loop":  false,
+                                     "sample_rate":  48000,
+                                     "channels":  4
+                                 },
+    "RsBgmRace.fs.48.dspadpcm.bfstm":  {
+                                           "loop":  true,
+                                           "sample_rate":  48000,
+                                           "channels":  2
+                                       },
+    "RsBgmCityScenario01.nk.48.pcm16.bfstm":  {
+                                                  "loop":  true,
+                                                  "sample_rate":  48000,
+                                                  "channels":  2
+                                              },
+    "StmRsBgmLakeScenario1.bfstm":  {
+                                        "loop":  true,
+                                        "sample_rate":  48000,
+                                        "channels":  6
+                                    },
+    "StmRsBgmBossKoopa02.bfstm":  {
+                                      "loop":  true,
+                                      "sample_rate":  48000,
+                                      "channels":  4
+                                  },
+    "StmRsBgmCitySession.bfstm":  {
+                                      "loop":  true,
+                                      "sample_rate":  48000,
+                                      "channels":  10
+                                  },
+    "StmDesertWorld_012.bfstm":  {
+                                     "loop":  false,
+                                     "sample_rate":  48000,
+                                     "channels":  4
+                                 },
+    "RsBgmMoonDungeon.nk.48.dspadpcm.bfstm":  {
+                                                  "loop":  true,
+                                                  "sample_rate":  48000,
+                                                  "channels":  2
+                                              },
+    "RsBgmCityScenario03Jp.nk.48.dspadpcm.bfstm":  {
+                                                       "loop":  true,
+                                                       "sample_rate":  48000,
+                                                       "channels":  2
+                                                   },
+    "StmRsBgmClashSecond.bfstm":  {
+                                      "loop":  true,
+                                      "sample_rate":  48000,
+                                      "channels":  4
+                                  },
+    "StmRsBgmBossKoopa01.bfstm":  {
+                                      "loop":  true,
+                                      "sample_rate":  48000,
+                                      "channels":  4
+                                  },
+    "RsBgmDesertTown.nk.22.dspadpcm.bfstm":  {
+                                                 "loop":  true,
+                                                 "sample_rate":  22000,
+                                                 "channels":  1
+                                             },
+    "StmRsBgmMoonEscape.bfstm":  {
+                                     "loop":  true,
+                                     "sample_rate":  48000,
+                                     "channels":  4
+                                 },
+    "StmDesertWorld_005.bfstm":  {
+                                     "loop":  false,
+                                     "sample_rate":  48000,
+                                     "channels":  4
+                                 },
+    "RsBgmStaffRoll.nk.48.dspadpcm.bfstm":  {
+                                                "loop":  false,
+                                                "sample_rate":  48000,
+                                                "channels":  2
+                                            },
+    "Silent_4s.dspadpcm.bfstm":  {
+                                     "loop":  false,
+                                     "sample_rate":  32000,
+                                     "channels":  2
+                                 },
+    "RsBgmDesertTownClct.nk.48.dspadpcm.bfstm":  {
+                                                     "loop":  true,
+                                                     "sample_rate":  48000,
+                                                     "channels":  2
+                                                 },
+    "RsBgmEndRockJpRadio.nk.22.dspadpcm.bfstm":  {
+                                                     "loop":  true,
+                                                     "sample_rate":  22000,
+                                                     "channels":  1
+                                                 },
+    "RsBgmShop01.k.48.dspadpcm.bfstm":  {
+                                            "loop":  false,
+                                            "sample_rate":  48000,
+                                            "channels":  2
+                                        },
+    "StmDesertWorld_007.bfstm":  {
+                                     "loop":  false,
+                                     "sample_rate":  48000,
+                                     "channels":  4
+                                 },
+    "StmDesertWorld_006.bfstm":  {
+                                     "loop":  false,
+                                     "sample_rate":  48000,
+                                     "channels":  4
+                                 },
+    "StmRsBgmDesertNight.bfstm":  {
+                                      "loop":  true,
+                                      "sample_rate":  48000,
+                                      "channels":  8
+                                  },
+    "RsBgmExPsyche.fs.48.dspadpcm.bfstm":  {
+                                               "loop":  true,
+                                               "sample_rate":  48000,
+                                               "channels":  2
+                                           },
+    "RsBgmLakeTunnel.fs.48.dspadpcm.bfstm":  {
+                                                 "loop":  true,
+                                                 "sample_rate":  48000,
+                                                 "channels":  2
+                                             },
+    "RsBgmSnowEnv007.fs.48.dspadpcm.bfstm":  {
+                                                 "loop":  false,
+                                                 "sample_rate":  48000,
+                                                 "channels":  2
+                                             },
+    "StmRsBgmLava.bfstm":  {
+                               "loop":  true,
+                               "sample_rate":  48000,
+                               "channels":  8
+                           },
+    "RsBgmCityCafe01Radio.nk.22.dspadpcm.bfstm":  {
+                                                      "loop":  true,
+                                                      "sample_rate":  22000,
+                                                      "channels":  1
+                                                  },
+    "RsBgmShop03.k.48.dspadpcm.bfstm":  {
+                                            "loop":  false,
+                                            "sample_rate":  48000,
+                                            "channels":  2
+                                        },
+    "StmDesertWorld_002.bfstm":  {
+                                     "loop":  false,
+                                     "sample_rate":  48000,
+                                     "channels":  4
+                                 },
+    "DummyBlank.dspadpcm.bfstm":  {
+                                      "loop":  true,
+                                      "sample_rate":  32000,
+                                      "channels":  2
+                                  },
+    "RsBgmSnowEnv010.fs.48.dspadpcm.bfstm":  {
+                                                 "loop":  false,
+                                                 "sample_rate":  48000,
+                                                 "channels":  2
+                                             },
+    "StmDesertWorld_008.bfstm":  {
+                                     "loop":  false,
+                                     "sample_rate":  48000,
+                                     "channels":  4
+                                 },
+    "RsBgmSnowEnv009.fs.48.dspadpcm.bfstm":  {
+                                                 "loop":  false,
+                                                 "sample_rate":  32000,
+                                                 "channels":  2
+                                             },
+    "StmDesertWorld_011.bfstm":  {
+                                     "loop":  false,
+                                     "sample_rate":  48000,
+                                     "channels":  4
+                                 },
+    "RsBgmShop04Radio.k.48.dspadpcm.bfstm":  {
+                                                 "loop":  false,
+                                                 "sample_rate":  48000,
+                                                 "channels":  1
+                                             },
+    "RsBgmBossDragon.fs.48.dspadpcm.bfstm":  {
+                                                 "loop":  true,
+                                                 "sample_rate":  48000,
+                                                 "channels":  2
+                                             },
+    "RsBgmEndRock.nk.48.dspadpcm.bfstm":  {
+                                              "loop":  true,
+                                              "sample_rate":  48000,
+                                              "channels":  2
+                                          },
+    "RsBgmLavaTown.fs.48.dspadpcm.bfstm":  {
+                                               "loop":  true,
+                                               "sample_rate":  48000,
+                                               "channels":  2
+                                           },
+    "RsBgmSnowEnv001.fs.48.dspadpcm.bfstm":  {
+                                                 "loop":  false,
+                                                 "sample_rate":  48000,
+                                                 "channels":  2
+                                             },
+    "RsBgmShop02Radio.k.48.dspadpcm.bfstm":  {
+                                                 "loop":  false,
+                                                 "sample_rate":  48000,
+                                                 "channels":  1
+                                             },
+    "StmRsBgmBossBreeda.bfstm":  {
+                                     "loop":  true,
+                                     "sample_rate":  48000,
+                                     "channels":  4
+                                 },
+    "RsBgmM1UG.k.32.dspadpcm.bfstm":  {
+                                          "loop":  true,
+                                          "sample_rate":  32000,
+                                          "channels":  2
+                                      },
+    "RsBgmRaidWorld.fs.48.dspadpcm.bfstm":  {
+                                                "loop":  true,
+                                                "sample_rate":  48000,
+                                                "channels":  2
+                                            },
+    "RsBgmSnowTown.fs.48.dspadpcm.bfstm":  {
+                                               "loop":  true,
+                                               "sample_rate":  48000,
+                                               "channels":  2
+                                           },
+    "StmRsBgmMoon.bfstm":  {
+                               "loop":  true,
+                               "sample_rate":  48000,
+                               "channels":  6
+                           },
+    "RsBgmShop01Radio.k.48.dspadpcm.bfstm":  {
+                                                 "loop":  false,
+                                                 "sample_rate":  48000,
+                                                 "channels":  1
+                                             },
+    "StmRsBgmExChika.bfstm":  {
+                                  "loop":  true,
+                                  "sample_rate":  48000,
+                                  "channels":  6
+                              },
+    "RsBgmSea01BallSlope.nk.48.dspadpcm.bfstm":  {
+                                                     "loop":  true,
+                                                     "sample_rate":  48000,
+                                                     "channels":  2
+                                                 },
+    "RsBgmHat.fs.48.dspadpcm.bfstm":  {
+                                          "loop":  true,
+                                          "sample_rate":  48000,
+                                          "channels":  2
+                                      },
+    "RsBgmE3Title.nk.48.dspadpcm.bfstm":  {
+                                              "loop":  true,
+                                              "sample_rate":  48000,
+                                              "channels":  2
+                                          },
+    "RsBgmPeachCastle.fs.48.dspadpcm.bfstm":  {
+                                                  "loop":  true,
+                                                  "sample_rate":  48000,
+                                                  "channels":  2
+                                              },
+    "RsBgmCityScenario04.nk.48.dspadpcm.bfstm":  {
+                                                     "loop":  true,
+                                                     "sample_rate":  48000,
+                                                     "channels":  2
+                                                 },
+    "StmDesertWorld_004.bfstm":  {
+                                     "loop":  false,
+                                     "sample_rate":  48000,
+                                     "channels":  4
+                                 },
+    "RsBgmRaceHurry.fs.48.dspadpcm.bfstm":  {
+                                                "loop":  true,
+                                                "sample_rate":  48000,
+                                                "channels":  2
+                                            },
+    "StmDesertWorld_010.bfstm":  {
+                                     "loop":  false,
+                                     "sample_rate":  48000,
+                                     "channels":  4
+                                 },
+    "StmRsBgmSea01.bfstm":  {
+                                "loop":  true,
+                                "sample_rate":  48000,
+                                "channels":  8
+                            },
+    "RsBgmShop04.k.48.dspadpcm.bfstm":  {
+                                            "loop":  false,
+                                            "sample_rate":  48000,
+                                            "channels":  2
+                                        },
+    "StmRsBgmLakeScenario2.bfstm":  {
+                                        "loop":  true,
+                                        "sample_rate":  48000,
+                                        "channels":  6
+                                    },
+    "StmRsBgmBossHaikai_B.bfstm":  {
+                                       "loop":  false,
+                                       "sample_rate":  48000,
+                                       "channels":  4
+                                   },
+    "RsBgmEndRock8bit.nk.48.dspadpcm.bfstm":  {
+                                                  "loop":  true,
+                                                  "sample_rate":  48000,
+                                                  "channels":  2
+                                              },
+    "RsBgmCityCafe01.nk.48.dspadpcm.bfstm":  {
+                                                 "loop":  true,
+                                                 "sample_rate":  48000,
+                                                 "channels":  2
+                                             },
+    "RsBgmDemoKoopaLv2Start.nk.48.dspadpcm.bfstm":  {
+                                                        "loop":  true,
+                                                        "sample_rate":  48000,
+                                                        "channels":  2
+                                                    },
+    "RsBgmJgTitle.nk.48.dspadpcm.bfstm":  {
+                                              "loop":  false,
+                                              "sample_rate":  48000,
+                                              "channels":  2
+                                          },
+    "RsBgmBossGateKeeper.nk.48.dspadpcm.bfstm":  {
+                                                     "loop":  true,
+                                                     "sample_rate":  48000,
+                                                     "channels":  2
+                                                 },
+    "RsBgmSnowEnv004.fs.48.dspadpcm.bfstm":  {
+                                                 "loop":  false,
+                                                 "sample_rate":  48000,
+                                                 "channels":  2
+                                             },
+    "StmRsBgmCityScenario03Special.bfstm":  {
+                                                "loop":  true,
+                                                "sample_rate":  48000,
+                                                "channels":  4
+                                            },
+    "RsBgmClashFirst.k.48.dspadpcm.bfstm":  {
+                                                "loop":  true,
+                                                "sample_rate":  48000,
+                                                "channels":  2
+                                            },
+    "RsBgmSky02.k.48.dspadpcm.bfstm":  {
+                                           "loop":  true,
+                                           "sample_rate":  48000,
+                                           "channels":  2
+                                       },
+    "StmRsBgmMoonParade.bfstm":  {
+                                     "loop":  true,
+                                     "sample_rate":  48000,
+                                     "channels":  6
+                                 },
+    "StmRsBgmForest.bfstm":  {
+                                 "loop":  true,
+                                 "sample_rate":  48000,
+                                 "channels":  6
+                             },
+    "RsBgmShop03Radio.k.48.dspadpcm.bfstm":  {
+                                                 "loop":  false,
+                                                 "sample_rate":  48000,
+                                                 "channels":  1
+                                             },
+    "RsBgmSlotRoom.nk.48.dspadpcm.bfstm":  {
+                                               "loop":  true,
+                                               "sample_rate":  48000,
+                                               "channels":  2
+                                           },
+    "StmRsBgmExHat.bfstm":  {
+                                "loop":  true,
+                                "sample_rate":  48000,
+                                "channels":  6
+                            },
+    "RsBgmKinopioBrigade.nk.32.dspadpcm.bfstm":  {
+                                                     "loop":  true,
+                                                     "sample_rate":  32000,
+                                                     "channels":  2
+                                                 },
+    "RsBgmCityScenario01Strain.nk.48.dspadpcm.bfstm":  {
+                                                           "loop":  true,
+                                                           "sample_rate":  48000,
+                                                           "channels":  2
+                                                       },
+    "StmRsBgmSea02.bfstm":  {
+                                "loop":  true,
+                                "sample_rate":  48000,
+                                "channels":  6
+                            },
+    "RsBgmExCold.nk.48.dspadpcm.bfstm":  {
+                                             "loop":  true,
+                                             "sample_rate":  48000,
+                                             "channels":  2
+                                         },
+    "StmRsBgmFall.bfstm":  {
+                               "loop":  true,
+                               "sample_rate":  48000,
+                               "channels":  4
+                           }
+}

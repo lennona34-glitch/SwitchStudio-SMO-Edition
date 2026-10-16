@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Switch Studio // Super Mario Odyssey Editor</title>
+    <link rel="stylesheet" href="style.css?v=1.5.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <div class="app-shell" id="appShell">
+        <!-- GLOBAL STUDIO HEADER -->
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="switch-badge">
+                    <span class="joycon-left"></span>
+                    <span class="joycon-right"></span>
+                    <span class="badge-text">SWITCH STUDIO</span>
+                </div>
+                <div class="title-meta">
+                    <h1>Super Mario Odyssey <span class="edition-tag">ROMFS ENGINE</span></h1>
+                </div>
+            </div>
+
+            <!-- PERSISTENT GLOBAL AUDIO NOW PLAYING PILL -->
+            <div class="global-audio-pill" id="globalAudioPill" title="Click to view playing audio">
+                <div class="eq-icon" id="globalEqIcon">
+                    <span class="eq-bar bar1"></span>
+                    <span class="eq-bar bar2"></span>
+                    <span class="eq-bar bar3"></span>
+                    <span class="eq-bar bar4"></span>
+                </div>
+                <div class="audio-text-group">
+                    <span class="audio-status-label" id="globalAudioStatus">IDLE</span>
+                    <span class="audio-track-title" id="globalAudioTitle">No audio playing</span>
+                </div>
+                <div class="header-audio-controls">
+                    <button class="btn-ctrl-icon" id="btnGlobalPrev" title="Previous Track / SFX">⏮</button>
+                    <button class="btn-ctrl-icon" id="btnGlobalPlayPause" title="Play / Pause">⏸</button>
+                    <button class="btn-ctrl-icon" id="btnGlobalNext" title="Next Track / SFX">⏭</button>
+                    <button class="btn-ctrl-icon" id="btnGlobalStop" title="Stop Audio">⏹</button>
+                    <button class="btn-ctrl-icon" id="btnGlobalAutoNext" title="Toggle Auto-Play Next Track / Sound Effect" style="font-size:11px; padding:0 6px; width:auto;">🔁 Auto</button>
+                </div>
+            </div>
+
+            <!-- HEADER ACTIONS -->
+            <div class="header-actions">
+                <button class="btn btn-zen" id="btnZenToggle" title="Toggle Fullscreen / Maximize Screen (Press 'Z')">
+                    <span class="zen-icon">⛶</span> Maximize Screen
+                </button>
+                <div class="status-pill" id="statusPill">
+                    <span class="indicator-dot online"></span>
+                    <span class="status-label">Eden: Online</span>
+                </div>
+                <button class="btn btn-primary" id="btnLaunchEden">▶ Launch Eden</button>
+            </div>
+        </header>
+
+        <!-- NAVIGATION TABS -->
+        <nav class="nav-tabs">
+            <button class="tab-btn active" data-tab="textures">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                3D Models &amp; Textures
+            </button>
+            <button class="tab-btn" data-tab="community">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                🌟 Community Packs (GameBanana)
+            </button>
+            <button class="tab-btn" data-tab="music">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                Music &amp; BGM (130 Tracks)
+            </button>
+            <button class="tab-btn" data-tab="sfx">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                Sound Effects &amp; Voice (5,134 FX)
+            </button>
+            <button class="tab-btn" data-tab="layeredfs">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                Eden LayeredFS Manager
+            </button>
+            <button class="tab-btn" data-tab="saves">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Saves &amp; Mod Menu
+            </button>
+        </nav>
+
+        <!-- ========================================================
+             TAB 1: 3D MODELS & TEXTURES (SPACIOUS 2-COLUMN DESIGN)
+        ======================================================== -->
+        <main class="tab-pane active" id="tab-textures">
+            <div class="viewport-duo-layout">
+                <!-- LEFT: STAGE / 3D VIEWPORT -->
+                <section class="panel-card stage-card">
+                    <div class="stage-header">
+                        <div class="stage-meta">
+                            <h2 id="activeSlotTitle">Mario Body & Outfit</h2>
+                            <span class="meta-tag" id="metaDim">512 × 256</span>
+                            <span class="meta-tag format" id="metaFormat">BC1_UNORM</span>
+                        </div>
+                        <div class="stage-controls-row">
+                            <div class="mesh-selector-wrap">
+                                <label>Mesh:</label>
+                                <select id="modelMeshSelect" class="compact-select">
+                                    <option value="full">Mario - full model</option>
+                                    <option value="full_nocap">Mario - full model (no cap)</option>
+                                    <option value="head">Head (face, eyes, hair, cap)</option>
+                                    <option value="head_nocap">Head (no cap)</option>
+                                    <option value="face">Face &amp; eyes only</option>
+                                    <option value="body">Body &amp; outfit only</option>
+                                    <option value="cap">Thrown cap</option>
+                                    <option value="sphere">Texture sphere (test)</option>
+                                </select>
+                            </div>
+                            <div class="view-toggle-btns">
+                                <button class="toggle-btn active" id="btnView3D">3D Model</button>
+                                <button class="toggle-btn" id="btnView2D">2D Comparison</button>
+                                <button class="toggle-btn" id="btnUVOverlay" title="Show where the real model uses this texture">UV Map</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3D VIEWPORT -->
+                    <div class="stage-canvas-area" id="stage3D">
+                        <div class="three-container" id="threeCanvasWrap">
+                            <canvas id="threeCanvas"></canvas>
+                        </div>
+                        <div class="viewport-hints">
+                            <span>Left Click: Rotate • Scroll: Zoom • Right Click: Pan</span>
+                            <button class="btn-micro" id="btnToggleModded" title="Switch the 3D model between your edited texture and the original">Texture: Edited</button>
+                            <button class="btn-micro" id="btnToggleRotate" title="Toggle Auto-Rotation">Auto-Spin: ON</button>
+                        </div>
+                    </div>
+
+                    <!-- 2D VIEWPORT (ALTERNATIVE) -->
+                    <div class="stage-canvas-area stage-2d" id="stage2D" style="display:none;">
+                        <div class="dual-canvas-box">
+                            <span class="box-caption">VANILLA SWITCH</span>
+                            <div class="img-frame">
+                                <div class="img-stack">
+                                    <img id="imgVanilla" src="" alt="Vanilla">
+                                    <canvas class="uv-overlay" id="imgVanillaUV"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dual-canvas-box mod-box">
+                            <span class="box-caption cyan">RESHAPED (LIVE)</span>
+                            <div class="img-frame">
+                                <div class="img-stack">
+                                    <img id="imgModded" src="" alt="Modded">
+                                    <canvas class="uv-overlay" id="imgModdedUV"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STAGE FOOTER -->
+                    <div class="stage-footer">
+                        <div class="stage-presets">
+                            <span class="label">Quick Presets:</span>
+                            <button class="btn btn-preset btn-sm" id="btnPresetEmerald">🌿 Emerald Outfit</button>
+                            <button class="btn btn-secondary btn-sm" id="btnResetSlot">Reset to Vanilla</button>
+                        </div>
+                        <button class="btn btn-action" id="btnCommitSlot">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                            Swizzle NVN & Deploy to Eden
+                        </button>
+                    </div>
+                </section>
+
+                <!-- RIGHT: RESHAPER & TEXTURE TOOLS -->
+                <aside class="panel-card tools-card">
+                    <!-- CHANNEL SELECTOR -->
+                    <div class="channel-selector-deck">
+                        <div class="deck-title">
+                            <h3>Select Mario Component</h3>
+                            <span class="count-badge" id="channelCount">5 Channels</span>
+                        </div>
+                        <div class="channel-pill-row" id="slotList">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- TOOL TABS -->
+                    <div class="tool-deck">
+                        <div class="tool-switcher">
+                            <button class="tool-pill active" data-tool="recolor">🎨 Color Alchemy</button>
+                            <button class="tool-pill" data-tool="composite">📷 Photo Face-Meld</button>
+                        </div>
+
+                        <!-- RECOLOR TOOL -->
+                        <div class="tool-pane active" id="tool-recolor">
+                            <div class="control-group">
+                                <div class="field-row">
+                                    <label>Hue Shift <span class="val-tag" id="valHue">0°</span></label>
+                                    <input type="range" id="sliderHue" min="-180" max="180" value="0" step="1">
+                                </div>
+                                <div class="field-row">
+                                    <label>Saturation <span class="val-tag" id="valSat">1.0x</span></label>
+                                    <input type="range" id="sliderSat" min="0" max="3" value="1.0" step="0.05">
+                                </div>
+                                <div class="field-row">
+                                    <label>Brightness <span class="val-tag" id="valVal">1.0x</span></label>
+                                    <input type="range" id="sliderVal" min="0" max="2" value="1.0" step="0.05">
+                                </div>
+                                <div class="field-row checkbox-row">
+                                    <label><input type="checkbox" id="checkInvert"> Invert Colors (Negative)</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- COMPOSITE / FACE WRAP TOOL -->
+                        <div class="tool-pane" id="tool-composite">
+                            <div class="drop-zone-spacious" id="dropZone">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                                <p>Drop a portrait here or <span class="link">Browse Files</span></p>
+                                <span class="subtext">The face is found, cropped and lined up on Mario automatically</span>
+                                <input type="file" id="fileInput" accept="image/*" style="display:none;">
+                            </div>
+                            <div class="file-tag" id="uploadedFileName"></div>
+                            <div class="auto-status" id="autoStatus"></div>
+                            <div class="field-row" id="rowReshape" style="display:none;">
+                                <label>Reshape Mario's face to match the photo <span class="val-tag" id="valReshape">0%</span></label>
+                                <input type="range" id="sliderReshape" min="0" max="100" value="0" step="5">
+                            </div>
+                            <div class="field-row checkbox-row" id="rowHideParts">
+                                <label><input type="checkbox" id="checkHideParts" checked> Remove Mario's moustache &amp; eyebrows (your photo's show instead)</label>
+                            </div>
+
+                            <details class="fine-tune" id="fineTune">
+                            <summary>Fine-tune (optional)</summary>
+                            <div class="control-group">
+                                <div class="field-row">
+                                    <label>Face Scale <span class="val-tag" id="valScale">1.0x</span></label>
+                                    <input type="range" id="sliderScale" min="0.1" max="2.0" value="1.0" step="0.05">
+                                </div>
+                                <div class="field-row">
+                                    <label>Edge Feathering <span class="val-tag" id="valFeather">8px</span></label>
+                                    <input type="range" id="sliderFeather" min="0" max="30" value="8" step="1">
+                                </div>
+                                <div class="field-row">
+                                    <label>Blend Opacity <span class="val-tag" id="valOpacity">100%</span></label>
+                                    <input type="range" id="sliderOpacity" min="0" max="1" value="1.0" step="0.05">
+                                </div>
+                                <div class="field-row">
+                                    <label>Even out photo light &amp; colour <span class="val-tag" id="valFlat">85%</span></label>
+                                    <input type="range" id="sliderFlat" min="0" max="100" value="85" step="5" title="Evens out the patches of light, shade and colour in the photo so the game's lighting does the shading">
+                                </div>
+                                <div class="field-row">
+                                    <label>Skin brightness <span class="val-tag" id="valBright">auto</span></label>
+                                    <input type="range" id="sliderBright" min="-50" max="50" value="0" step="1" title="0 = matched to Mario's skin automatically">
+                                </div>
+                                <div class="field-row" id="rowRotate" style="display:none;">
+                                    <label>Straighten <span class="val-tag" id="valRotate">0°</span></label>
+                                    <input type="range" id="sliderRotate" min="-45" max="45" value="0" step="1" title="Rotate the photo (positive = clockwise)">
+                                </div>
+                                <div class="field-row">
+                                    <label>Offset X / Y</label>
+                                    <div class="dual-inputs">
+                                        <input type="range" id="sliderOffX" min="-256" max="256" value="0" step="1" title="Offset X">
+                                        <input type="range" id="sliderOffY" min="-256" max="256" value="0" step="1" title="Offset Y">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="placement-hint" id="placementHint">
+                                Turn on <b>UV Map</b> (2D view) and click the texture to place the portrait where the real mesh uses it.
+                            </div>
+                            <button class="btn btn-outline btn-full" id="btnResetAlign" style="margin-top:6px;">Re-align automatically</button>
+                            </details>
+                        </div>
+                    </div>
+
+                    <!-- MARIO SIZE & PROPORTIONS (TINY / CHIBI / NORMAL / BIG HEAD / GIANT / TITAN) -->
+                    <div class="mario-scale-deck" id="marioScaleDeck">
+                        <div class="deck-title" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                            <h3 style="margin:0; font-size:13px; color:#f8fafc;">🍄 Mario 3D Size &amp; Proportions</h3>
+                            <span class="count-badge" id="marioScaleBadge" style="background:rgba(16,185,129,0.18); color:#6ee7b7; border:1px solid rgba(16,185,129,0.4);">Normal (1.0x)</span>
+                        </div>
+                        <div class="scale-preset-grid" id="marioScalePresetGrid">
+                            <button class="btn-scale-preset" data-scale-preset="tiny" title="Pocket-sized 0.45x Mini-Mushroom Mario">🐜 Tiny (0.45x)</button>
+                            <button class="btn-scale-preset" data-scale-preset="chibi" title="Child-sized 0.68x Mario with cute 1.38x chibi head">🧒 Kid / Chibi</button>
+                            <button class="btn-scale-preset active" data-scale-preset="normal" title="Standard 1.0x Mario proportions">🍄 Normal (1.0x)</button>
+                            <button class="btn-scale-preset" data-scale-preset="bobblehead" title="Normal body with a 2.0x giant head &amp; cap">🎈 Big Head (2x)</button>
+                            <button class="btn-scale-preset" data-scale-preset="giant" title="Mega-Mushroom 2.0x Giant Mario">🦖 Giant (2.0x)</button>
+                            <button class="btn-scale-preset" data-scale-preset="titan" title="Colossal 3.0x Towering Mario">🏔️ Titan (3.0x)</button>
+                        </div>
+                        <div class="scale-sliders-row" style="margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                            <div class="field-row" style="margin:0;">
+                                <label style="font-size:11px;">Body Size <span class="val-tag" id="valBodyScale">1.00x</span></label>
+                                <input type="range" id="sliderBodyScale" min="0.35" max="3.0" value="1.0" step="0.05">
+                            </div>
+                            <div class="field-row" style="margin:0;">
+                                <label style="font-size:11px;">Head Proportion <span class="val-tag" id="valHeadMult">1.00x</span></label>
+                                <input type="range" id="sliderHeadMult" min="0.60" max="2.5" value="1.0" step="0.05">
+                            </div>
+                        </div>
+                        <button class="btn btn-action btn-full" id="btnDeployMarioScale" style="margin-top:8px; padding:8px 12px; font-size:12px;">
+                            ⚡ Apply Size to 3D Preview &amp; Deploy to Game
+                        </button>
+                    </div>
+                </aside>
+            </div>
+        </main>
+
+        <!-- ========================================================
+             TAB 1B: COMMUNITY PACKS (GAMEBANANA BROWSER & 1-CLICK INSTALLER)
+        ======================================================== -->
+        <main class="tab-pane" id="tab-community">
+            <div class="community-master-layout">
+                <!-- SPOTLIGHT HERO: YOSHI STAR KINGDOM (SUPER MARIO GALAXY 2 REMASTERED) -->
+                <section class="panel-card community-hero-card">
+                    <div class="community-hero-content">
+                        <div class="community-hero-badges">
+                            <span class="gb-badge-featured">🌟 GRANDSON MIND-BLOWER • 3D GALAXY OVERHAUL</span>
+                            <span class="gb-badge-active" id="yskHeroStatusBadge">● INSTALLED &amp; ACTIVE IN EDEN</span>
+                        </div>
+                        <h2>Yoshi Star Kingdom <span style="font-weight:400; color:#93c5fd; font-size:16px;">(Super Mario Galaxy 2 Remastered)</span></h2>
+                        <p class="community-hero-desc">
+                            Full custom 3D level geometry &amp; texture port of <strong>Super Mario Galaxy 2's Yoshi Star Galaxy</strong> right inside Super Mario Odyssey!
+                            Features custom 3D planetoids, Lava &amp; Spiny Planets, Launch Stars, Pull Stars, cosmic skybox, and <strong>8 normalized 48kHz Galaxy soundtrack streams</strong> synced with your custom Mario face &amp; music!
+                        </p>
+                        <div class="how-to-play-callout">
+                            <span class="callout-icon">🚀</span>
+                            <div>
+                                <strong>How to Play in Eden Right Now:</strong>
+                                <span>Just click <strong>Launch Eden</strong> and press <strong>Resume / Start</strong>! QuickMoon loads you straight into <strong>Yoshi Star Galaxy</strong> (and keeps a separate save at <code>switch/qm-save/remaster-ysk/</code> so your 100% Odyssey save is completely safe!).</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="community-hero-actions">
+                        <img src="https://images.gamebanana.com/img/ss/mods/6575c7fd43d59.jpg" alt="Yoshi Star Kingdom" class="community-hero-img">
+                        <div class="community-hero-btns">
+                            <button class="btn btn-primary" id="btnHeroLaunchEden" style="flex:1;">▶ Launch in Eden</button>
+                            <button class="btn btn-secondary" id="btnHeroToggleYsk" data-pack-id="YoshiStarKingdom">Disable Pack</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SEARCH & FILTER BAR -->
+                <section class="panel-card community-browser-card">
+                    <div class="community-toolbar">
+                        <div class="community-toolbar-left">
+                            <h3>📦 Curated &amp; Live GameBanana Packs <span class="count-badge" id="communityCountBadge">5 Featured</span></h3>
+                            <div class="community-filter-pills" id="communityViewPills">
+                                <button class="pill active" data-view="curated">⭐ Featured &amp; Installed Packs</button>
+                                <button class="pill" data-view="live">🌐 Browse Live GameBanana (SMO #6376)</button>
+                            </div>
+                        </div>
+                        <div class="community-search-wrap">
+                            <input type="text" id="gbSearchInput" placeholder="🔍 Search GameBanana (e.g. Galaxy, Sunshine, Texture, Luigi, Kingdom)...">
+                            <button class="btn btn-action btn-sm" id="btnGbSearch">Search GameBanana</button>
+                        </div>
+                    </div>
+
+                    <div class="community-packs-grid" id="communityPacksGrid">
+                        <!-- Populated dynamically by JS -->
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- ========================================================
+             TAB 2: MUSIC & BGM (SPACIOUS 2-COLUMN DESIGN)
+        ======================================================== -->
+        <main class="tab-pane" id="tab-music">
+            <div class="audio-master-layout">
+                <!-- LEFT: BGM CATALOG -->
+                <aside class="panel-card catalog-card">
+                    <div class="catalog-header">
+                        <div class="search-box">
+                            <input type="text" id="bgmSearch" placeholder="🔍 Search 130 BGM tracks (Title, Kingdom, Boss...)...">
+                        </div>
+                        <div class="filter-pills" id="bgmFilterPills">
+                            <button class="pill active" data-filter="all">All</button>
+                            <button class="pill" data-filter="City">Metro</button>
+                            <button class="pill" data-filter="Desert">Sand</button>
+                            <button class="pill" data-filter="Forest">Wooded</button>
+                            <button class="pill" data-filter="Waterfall">Cascade</button>
+                            <button class="pill" data-filter="Moon">Moon</button>
+                            <button class="pill" data-filter="Boss">Bosses</button>
+                        </div>
+                    </div>
+                    <div class="track-scroller" id="bgmTrackList">
+                        <!-- Populated by JS -->
+                    </div>
+                </aside>
+
+                <!-- RIGHT: BGM PLAYER & REPLACE DECK -->
+                <section class="panel-card deck-card">
+                    <div class="now-playing-banner">
+                        <div class="banner-badge">BGM MASTER TRACK • 48kHz DSP-ADPCM</div>
+                        <h2 id="bgmActiveTitle">Select a track from the library</h2>
+                        <p class="track-filename" id="bgmActiveFilename">RsBgmTitle.nk.48.dspadpcm.bfstm</p>
+                    </div>
+
+                    <!-- WAVEFORM & AUDIO PLAYER -->
+                    <div class="player-console">
+                        <audio id="bgmAudioPlayer" controls></audio>
+                        <div class="audio-transport-row" style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                            <div style="display:flex; gap:6px;">
+                                <button class="btn btn-secondary btn-sm" id="btnPrevBgm" title="Play previous track in list">⏮ Prev</button>
+                                <button class="btn btn-secondary btn-sm" id="btnNextBgm" title="Play next track in list">⏭ Next</button>
+                            </div>
+                            <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#cbd5e1; cursor:pointer; user-select:none; background:rgba(0,210,255,0.08); border:1px solid rgba(0,210,255,0.25); padding:4px 10px; border-radius:6px;">
+                                <input type="checkbox" id="checkAutoPlayBgm" style="accent-color:var(--accent-cyan); cursor:pointer;">
+                                <span>🔁 Auto-Play Next Track</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- REPLACE & DEPLOY DECK -->
+                    <div class="replace-deck">
+                        <div class="drop-zone-spacious" id="bgmDropZone">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <p>Drop Custom Song (WAV or MP3) or <span class="link">Browse</span></p>
+                            <span class="subtext">Auto-transcodes to 48kHz Nintendo DSP-ADPCM BFSTM</span>
+                            <input type="file" id="bgmFileInput" accept=".wav,.mp3" style="display:none;">
+                        </div>
+                        <div class="file-tag" id="bgmUploadedName"></div>
+
+                        <button class="btn btn-action btn-full" id="btnReplaceBgm" disabled>
+                            ⚡ Transcode to BFSTM & Deploy to Eden
+                        </button>
+                    </div>
+
+                    <!-- JUKEBOX DIRECTORY SCANNER & BATCH REPLACER -->
+                    <div class="jukebox-deck" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); padding-bottom: 16px;">
+                        <div class="banner-badge" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;">
+                            🎲 JUKEBOX AUTO-SWAPPER • BATCH SCANNER
+                        </div>
+                        <h3 style="margin: 8px 0 4px 0; font-size: 15px; color: #fff;">Randomly Shuffle & Replace Game Music</h3>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4;">Pick a folder or drop your favourite MP3 / WAV songs. Switch Studio will transcode and distribute them across Odyssey's Title Screen, Sand, Metro, and Cascade kingdoms!</p>
+                        
+                        <div class="drop-zone-compact" id="jukeboxDropZone" style="border: 2px dashed rgba(168, 85, 247, 0.4); border-radius: 8px; padding: 12px; text-align: center; background: rgba(168, 85, 247, 0.05); margin-bottom: 10px; cursor: pointer;">
+                            <span style="font-size: 13px; color: #c084fc;">📥 Drag & Drop Music Files Here or <strong style="text-decoration: underline;">Click to Browse</strong></span>
+                            <input type="file" id="jukeboxFileInput" multiple accept=".mp3,.wav,.flac,.m4a,.ogg" style="display:none;">
+                            <input type="file" id="jukeboxFolderInput" webkitdirectory directory multiple style="display:none;">
+                        </div>
+
+                        <!-- FOLDER & PRESET CONTROLS -->
+                        <div style="display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; align-items: center;">
+                            <button class="btn btn-secondary btn-sm" id="btnPickFolder" style="white-space: nowrap; font-weight: 600;">📁 Browse Folder...</button>
+                            <button class="btn btn-secondary btn-sm" id="btnQuickConverted" style="white-space: nowrap; background: rgba(168, 85, 247, 0.25); border-color: rgba(168, 85, 247, 0.5); color: #e9d5ff; font-weight: 600;">🎧 Music Library</button>
+                            <button class="btn btn-secondary btn-sm" id="btnQuickDownloads" style="white-space: nowrap;">📂 Downloads</button>
+                            <button class="btn btn-secondary btn-sm" id="btnQuickMusic" style="white-space: nowrap;">🎵 Music</button>
+                            <button class="btn btn-secondary btn-sm" id="btnPickFiles" style="white-space: nowrap;">🎶 Pick Songs...</button>
+                            <button class="btn btn-secondary btn-sm" id="btnResetAudio" style="white-space: nowrap; background: rgba(239, 68, 68, 0.25); border-color: rgba(239, 68, 68, 0.6); color: #fca5a5; font-weight: 600;" title="Restore all music and sounds back to original Nintendo vanilla audio">🔄 Reset Audio (Vanilla)</button>
+                        </div>
+                        <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+                            <input type="text" id="inputMusicDir" placeholder="Folder path, e.g. C:\Downloads" value="C:\Users\adria\Desktop\Private\Converted Music" style="flex: 1; min-width: 160px; padding: 8px 12px; border-radius: 6px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 13px;">
+                            <button class="btn btn-secondary btn-sm" id="btnScanMusicDir" style="white-space: nowrap; font-weight: 600;">🔍 Scan</button>
+                        </div>
+                        <div id="scanResultBadge" style="font-size: 12px; color: var(--accent-cyan); margin-bottom: 10px; display: none;"></div>
+                        
+                        <!-- TRACK SCOPE SELECTOR -->
+                        <div style="margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.04); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08);">
+                            <label for="selectTrackScope" style="font-size: 12px; color: #cbd5e1; font-weight: 600;">Deployment Scope:</label>
+                            <select id="selectTrackScope" style="background: #1e1b4b; color: #e0e7ff; border: 1px solid #6366f1; border-radius: 4px; padding: 4px 8px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                                <option value="50" selected>⚡ 50 Priority Tracks (Kingdoms & Bosses)</option>
+                                <option value="130">🌐 All 130 Tracks (Full Game BGM)</option>
+                            </select>
+                        </div>
+
+                        <!-- BIG PURPLE SHUFFLE BUTTON -->
+                        <button class="btn btn-preset btn-full" id="btnBatchShuffleMusic" style="background: linear-gradient(135deg, #a855f7, #6366f1); color: #fff; font-weight: 700; padding: 14px 18px; font-size: 14px; cursor: pointer; border-radius: 8px; min-height: 48px; box-sizing: border-box; line-height: 1.3; display: block; width: 100%; margin-top: 4px; margin-bottom: 10px; text-align: center;">
+                            🎲 Shuffle & Batch Deploy to Game
+                        </button>
+                        <div id="batchProgressText" style="font-size: 12px; color: #a5b4fc; margin-top: 8px; line-height: 1.4; display: none;"></div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- ========================================================
+             TAB 3: SOUND EFFECTS & FOLEY (DEDICATED SECTION!)
+        ======================================================== -->
+        <main class="tab-pane" id="tab-sfx">
+            <div class="sfx-master-layout">
+                <!-- LEFT: SFX CATALOG (5,134 FILES) -->
+                <aside class="panel-card catalog-card">
+                    <div class="catalog-header">
+                        <div class="search-box">
+                            <input type="text" id="sfxSearch" placeholder="🔍 Search 5,134 SFX &amp; Voices (Jump, Coin, Moon, Cappy, Yahoo, Boss)...">
+                        </div>
+                        <div class="filter-pills" id="sfxFilterPills">
+                            <button class="pill active" data-filter="featured">⭐ Iconic &amp; Featured</button>
+                            <button class="pill" data-filter="all">All (5,134)</button>
+                            <button class="pill" data-filter="Fanfares & Moons">🌙 Fanfares &amp; Moons (27)</button>
+                            <button class="pill" data-filter="Mario Voice">🍄 Mario Voice (125)</button>
+                            <button class="pill" data-filter="Mario & Cappy">🧢 Mario &amp; Cappy (147)</button>
+                            <button class="pill" data-filter="Coins & Stage FX">🪙 Coins &amp; Stage FX (198)</button>
+                            <button class="pill" data-filter="8-Bit 2D Retro">👾 8-Bit 2D (18)</button>
+                            <button class="pill" data-filter="Menus & UI">🎛️ Menus &amp; UI (45)</button>
+                            <button class="pill" data-filter="Footsteps & Movement">👟 Footsteps (102)</button>
+                            <button class="pill" data-filter="Enemies & Captures">🦖 Enemies (663)</button>
+                            <button class="pill" data-filter="Bosses & Broodals">🐉 Bosses (932)</button>
+                            <button class="pill" data-filter="World Objects">🧱 World Objects (763)</button>
+                            <button class="pill" data-filter="NPCs & Voices">🗣️ NPCs &amp; Voices (1,905)</button>
+                            <button class="pill" data-filter="Foley & Atmosphere">🌬️ Foley &amp; Cutscenes (209)</button>
+                            <button class="pill" data-filter="modded">🔥 Modded Only</button>
+                        </div>
+                    </div>
+                    <div class="track-scroller" id="sfxTrackList">
+                        <!-- Populated by JS -->
+                    </div>
+                </aside>
+
+                <!-- RIGHT: SFX AUDITION & VOICEMOD BOOTH -->
+                <section class="panel-card sfx-deck-card">
+                    <!-- SFX AUDITION -->
+                    <div class="sfx-audition-box">
+                        <div class="banner-badge sfx-badge" id="sfxActiveBadge">NINTENDOWARE WAVE ARCHIVE • FWAV / BFSTM</div>
+                        <h2 id="sfxActiveTitle">Select a sound effect or voice clip</h2>
+                        <p class="track-filename" id="sfxActiveFilename">WsPvJump00 • SeResourceStd2nd.aras</p>
+                        <div class="player-console-compact">
+                            <audio id="sfxAudioPlayer" controls></audio>
+                            <div class="audio-transport-row" style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                                <div style="display:flex; gap:6px;">
+                                    <button class="btn btn-secondary btn-sm" id="btnPrevSfx" title="Play previous sound effect in list">⏮ Prev</button>
+                                    <button class="btn btn-secondary btn-sm" id="btnNextSfx" title="Play next sound effect in list">⏭ Next</button>
+                                </div>
+                                <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#cbd5e1; cursor:pointer; user-select:none; background:rgba(0,210,255,0.08); border:1px solid rgba(0,210,255,0.25); padding:4px 10px; border-radius:6px;">
+                                    <input type="checkbox" id="checkAutoPlaySfx" style="accent-color:var(--accent-cyan); cursor:pointer;">
+                                    <span>🔁 Auto-Play Next Sound Effect</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="sfx-replace-row">
+                            <div class="sfx-drop-compact" id="sfxDropZone">
+                                <span>Drop WAV/MP3/OGG/FLAC or Click to swap this SFX</span>
+                                <input type="file" id="sfxFileInput" accept=".wav,.mp3,.ogg,.flac,.m4a" style="display:none;">
+                            </div>
+                            <button class="btn btn-action btn-sm" id="btnReplaceSfx" disabled>⚡ Deploy SFX</button>
+                        </div>
+                    </div>
+
+                    <!-- VOICEMOD & LIVE VOCAL RECORDER -->
+                    <div class="voicemod-sampler-box">
+                        <div class="vm-top">
+                            <div class="vm-title-wrap">
+                                <span class="vm-badge">🎙️ VOICEMOD &amp; MIC SAMPLER</span>
+                                <h3>Live Vocal Sound Effect Recorder</h3>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:6px; min-width:0;">
+                                <select id="audioDeviceSelect" class="compact-select">
+                                    <option value="">Default Microphone / Voicemod Virtual Audio</option>
+                                </select>
+                                <button class="btn btn-secondary btn-sm" id="btnRefreshMics" title="Scan for Voicemod Virtual Audio &amp; Microphones">🔄</button>
+                            </div>
+                        </div>
+
+                        <!-- LIVE OSCILLOSCOPE / FREQUENCY CANVAS -->
+                        <div class="visualizer-stage">
+                            <canvas id="micVisualizer"></canvas>
+                        </div>
+
+                        <div class="vm-controls-bar">
+                            <div class="vm-action-group">
+                                <button class="btn btn-record" id="btnRecordVoice">🔴 Record Clip</button>
+                                <button class="btn btn-secondary" id="btnStopVoice" disabled>⏹ Stop</button>
+                                <audio id="recordedAudioPreview" controls style="display:none; height:32px; max-width:210px;"></audio>
+                            </div>
+                            <div class="vm-deploy-group" id="vmDeployRow" style="display:flex;">
+                                <label>Target FX:</label>
+                                <select id="voiceTargetSelect" class="compact-select">
+                                    <option value="__active__">🎯 Currently Selected SFX (Left Panel)</option>
+                                    <option value="fwav:SeResourceStd2nd.aras:35136:1691:WsPvJump00">🍄 Mario Jump ('Yah!')</option>
+                                    <option value="fwav:SeResourceStd2nd.aras:35136:1699:WsPvJumpHigh00">🍄 Mario Triple Jump ('Wahoo!')</option>
+                                    <option value="fwav:SeResourceStd2nd.aras:35136:1698:WsPvJumpBroad">🍄 Mario Long Jump ('Yahoooo!')</option>
+                                    <option value="fwav:SeResourceStd2nd.aras:35136:183:WsSsCoin">🪙 Gold Coin Pickup</option>
+                                    <option value="fwav:BgmResourceStd2nd.aras:8576:1:WsdRsBgmJgMainMoon">🌙 Power Moon Get Fanfare</option>
+                                    <option value="fwav:BgmResourceStd2nd.aras:8576:7:WsdLifeMaxUp">❤️ Life-Up Heart Fanfare</option>
+                                    <option value="StSyD003_DemoHackFirstFrog.bfstm">🐸 Frog Capture Cutscene</option>
+                                    <option value="StSyD019_KoopaHack.bfstm">🐉 Bowser Capture Roar</option>
+                                </select>
+                                <button class="btn btn-action btn-sm" id="btnDeployVocal" disabled>⚡ Deploy Voice into Game</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- ========================================================
+             TAB 4: EDEN LAYEREDFS MANAGER (CLEAN DASHBOARD)
+        ======================================================== -->
+        <main class="tab-pane" id="tab-layeredfs">
+            <div class="mod-deck-layout">
+                <div class="panel-card mod-main-card">
+                    <div class="mod-top">
+                        <div class="mod-title-group">
+                            <h2>Eden LayeredFS Engine Status</h2>
+                            <p class="subtitle">Real-time RomFS interceptor active in Eden Emulator</p>
+                        </div>
+                        <span class="status-chip active">MOD ACTIVE IN EDEN</span>
+                    </div>
+
+                    <div class="mod-stats-grid">
+                        <div class="stat-pill">
+                            <span class="label">Target Game:</span>
+                            <span class="val">Super Mario Odyssey [0100000000010000]</span>
+                        </div>
+                        <div class="stat-pill">
+                            <span class="label">Mod Directory:</span>
+                            <span class="val code" id="dispModPath">load\0100000000010000\ClaraMarioReshaped\</span>
+                        </div>
+                        <div class="stat-pill">
+                            <span class="label">Active Title:</span>
+                            <span class="val highlight" id="dispModName">ClaraMarioReshaped</span>
+                        </div>
+                    </div>
+
+                    <div class="mod-tree-box">
+                        <h3>Deployed LayeredFS Assets</h3>
+                        <div class="tree-grid">
+                            <div class="tree-group">
+                                <h4>📁 ObjectData/ (3D Characters & Meshes)</h4>
+                                <ul>
+                                    <li>🎮 <strong>Mario.szs</strong> — Emerald Shirt, Charcoal Overalls, Boots (All 10 Mips)</li>
+                                    <li>🧢 <strong>MarioHeadTexture.szs</strong> — Emerald Cap & Emblem (All 9 Mips)</li>
+                                    <li>😊 <strong>MarioFace.szs</strong> — Clara Melded Facial Contours (All 9 Mips)</li>
+                                    <li>👁️ <strong>MarioEye.szs</strong> — Clara Crystal-Blue Iris (All 9 Mips BC3)</li>
+                                </ul>
+                            </div>
+                            <div class="tree-group">
+                                <h4>📁 SoundData/ (Audio Streams & Effects)</h4>
+                                <ul>
+                                    <li>🎵 <strong>stream/</strong> — 130 48kHz BGM background music tracks</li>
+                                    <li>⚡ <strong>streamSe/</strong> — 72 Sound Effect and Atmospheric streams</li>
+                                    <li>🎙️ <strong>Voicemod Virtual Mic</strong> — Custom vocal injections</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mod-foot">
+                        <span class="hint">Mods are non-destructive and load automatically when Super Mario Odyssey starts.</span>
+                        <button class="btn btn-primary" id="btnQuickLaunch">▶ Launch Game in Eden</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ========================================================
+             TAB 5: SAVES & IN-GAME MOD MENU
+        ======================================================== -->
+        <main class="tab-pane" id="tab-saves">
+            <div class="saves-duo-layout">
+                <!-- LEFT COLUMN: 100% SAVE INJECTOR & BACKUPS -->
+                <div class="save-injector-column">
+                    <!-- 100% INJECTOR HERO CARD -->
+                    <div class="panel-card save-hero-card">
+                        <div class="save-hero-header">
+                            <div class="save-title-wrap">
+                                <span class="gold-badge">★ 100% COMPLETE SAVE</span>
+                                <h2>Odyssey Master Save Injector</h2>
+                                <p class="save-subtitle">All 999 Moons, Gold Odyssey Sail, Peach Castle Top Hat, 100% Purple Coins & Extras.</p>
+                            </div>
+                        </div>
+
+                        <!-- SLOT SELECTOR -->
+                        <div class="slot-selector-section">
+                            <label class="section-label">Select Save Slot to Inject:</label>
+                            <div class="slots-grid" id="saveSlotsGrid">
+                                <!-- Populated dynamically by JS -->
+                                <div class="slot-loading">Scanning save files in Eden...</div>
+                            </div>
+                        </div>
+
+                        <!-- ACTION BUTTON -->
+                        <div class="save-actions-wrap">
+                            <button class="btn btn-gold-lg" id="btnInject100">
+                                <span class="btn-icon">⚡</span> Inject 100% Complete Save
+                            </button>
+                            <span class="safe-note">🛡️ Automatic safe backup created before any file is touched.</span>
+                        </div>
+
+                        <!-- UNLOCKS BREAKDOWN CHECKLIST -->
+                        <div class="save-features-checklist">
+                            <h3>Included in 100% Master Save:</h3>
+                            <div class="features-grid">
+                                <div class="feature-item">
+                                    <span class="f-icon">🌕</span>
+                                    <div class="f-text">
+                                        <strong>999 Power Moons</strong>
+                                        <span>Odyssey sail turns solid gold, balloon maxed</span>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <span class="f-icon">🎩</span>
+                                    <div class="f-text">
+                                        <strong>Peach's Castle Top Hat</strong>
+                                        <span>Giant top hat unlocked with developer postcard</span>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <span class="f-icon">💰</span>
+                                    <div class="f-text">
+                                        <strong>9,999 Gold Coins</strong>
+                                        <span>999,999 total coins recorded</span>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <span class="f-icon">💜</span>
+                                    <div class="f-text">
+                                        <strong>1,000 Regional Coins</strong>
+                                        <span>100% collected across all 17 kingdoms</span>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <span class="f-icon">👑</span>
+                                    <div class="f-text">
+                                        <strong>All 64 Costumes & Caps</strong>
+                                        <span>Every outfit unlocked and purchased</span>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <span class="f-icon">🏰</span>
+                                    <div class="f-text">
+                                        <strong>All 17 Kingdoms Visited</strong>
+                                        <span>Dark Side, Darker Side, Mushroom Kingdom</span>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <span class="f-icon">🎵</span>
+                                    <div class="f-text">
+                                        <strong>Toad's Music Player</strong>
+                                        <span>All 79 soundtrack songs fully unlocked</span>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <span class="f-icon">🏆</span>
+                                    <div class="f-text">
+                                        <strong>All 61 Achievements</strong>
+                                        <span>Every Toadette star achievement completed</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BACKUP & RESTORE CARD -->
+                    <div class="panel-card backup-card">
+                        <div class="card-header-row">
+                            <h3>Save Backups & Revert Points</h3>
+                            <button class="btn btn-secondary btn-sm" id="btnManualBackup">📦 Create Backup Now</button>
+                        </div>
+                        <div class="backup-restore-row">
+                            <select id="backupSelect" class="styled-select">
+                                <option value="">Select a backup point to restore...</option>
+                            </select>
+                            <button class="btn btn-warning btn-sm" id="btnRestoreBackup">🔄 Restore Save</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN: IN-GAME MOD MENU (LUNAKIT) & CHEATS -->
+                <div class="mod-menu-column">
+                    <!-- TINY / GIANT MARIO QUICK CARD -->
+                    <div class="panel-card lunakit-card" style="margin-bottom:14px;">
+                        <div class="card-header-row">
+                            <div class="card-title-group">
+                                <span class="cyber-badge" style="background:rgba(16,185,129,0.2); color:#6ee7b7; border-color:rgba(16,185,129,0.4);">1-CLICK SIZER (NO MOD MENU NEEDED)</span>
+                                <h2>🍄 Tiny / Chibi / Giant Mario</h2>
+                            </div>
+                            <span class="status-pill-badge active" id="savesMarioScaleBadge">● Normal (1.0x)</span>
+                        </div>
+                        <p class="card-desc">Directly scales Mario's 3D skeleton &amp; head in <code>Mario.szs</code> — works in every Kingdom (including Yoshi Star Galaxy!) without touching any Chinese debug menus.</p>
+                        <div class="scale-preset-grid" id="savesMarioScaleGrid" style="margin-top:8px;">
+                            <button class="btn-scale-preset" data-scale-preset="tiny">🐜 Tiny (0.45x)</button>
+                            <button class="btn-scale-preset" data-scale-preset="chibi">🧒 Kid / Chibi</button>
+                            <button class="btn-scale-preset active" data-scale-preset="normal">🍄 Normal (1.0x)</button>
+                            <button class="btn-scale-preset" data-scale-preset="bobblehead">🎈 Big Head (2x)</button>
+                            <button class="btn-scale-preset" data-scale-preset="giant">🦖 Giant (2.0x)</button>
+                            <button class="btn-scale-preset" data-scale-preset="titan">🏔️ Titan (3.0x)</button>
+                        </div>
+                    </div>
+
+                    <!-- LUNAKIT CARD -->
+                    <div class="panel-card lunakit-card">
+                        <div class="card-header-row">
+                            <div class="card-title-group">
+                                <span class="cyber-badge">IN-GAME GUI</span>
+                                <h2>LunaKit Mod Menu</h2>
+                            </div>
+                            <span class="status-pill-badge active" id="lunakitStatusBadge">● Active in Eden</span>
+                        </div>
+                        <p class="card-desc">Interactive in-game debug &amp; modding menu rendered directly over Super Mario Odyssey.</p>
+
+                        <!-- IN-GAME CONTROLS GUIDE -->
+                        <div class="hotkey-box">
+                            <div class="hotkey-header">🎮 Controller &amp; Mouse Controls (In-Game)</div>
+                            <div class="hotkey-list">
+                                <div class="hotkey-row">
+                                    <div class="keys"><kbd>ZR</kbd> + <kbd>R</kbd> + <kbd>L</kbd></div>
+                                    <div class="desc">Open / Close Mod Menu on screen</div>
+                                </div>
+                                <div class="hotkey-row">
+                                    <div class="keys"><kbd>ZR</kbd> + <kbd>R</kbd> + <kbd>ZL</kbd></div>
+                                    <div class="desc">Toggle Controller Navigation Mode</div>
+                                </div>
+                                <div class="hotkey-row">
+                                    <div class="keys"><kbd>L3 (Left Stick Click)</kbd></div>
+                                    <div class="desc">Hide / Show active windows</div>
+                                </div>
+                                <div class="hotkey-row">
+                                    <div class="keys"><span class="mouse-tag">🖱️ PC Mouse</span></div>
+                                    <div class="desc">Click, drag, and resize any menu window in Eden!</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FEATURES GRID -->
+                        <div class="lunakit-features">
+                            <h4>Mod Menu Powers:</h4>
+                            <ul class="power-list">
+                                <li><strong>🚀 Stage Warper:</strong> Instant teleport to any kingdom, sub-level, or boss arena.</li>
+                                <li><strong>👻 Noclip &amp; Freecam:</strong> Fly freely through walls and inspect everything.</li>
+                                <li><strong>🛡️ Cheats &amp; God Mode:</strong> Infinite health, invincibility, timer stop.</li>
+                                <li><strong>🦖 Actor &amp; Entity Spawner:</strong> Spawn T-Rex, Bowser, Goombas, vehicles anywhere!</li>
+                                <li><strong>⚡ Physics Editor:</strong> Modify gravity, run velocity, jump height on the fly.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- CHEATS CARD -->
+                    <div class="panel-card cheats-card">
+                        <div class="card-header-row">
+                            <div class="card-title-group">
+                                <span class="cheat-badge">ATMOSPHERE / EDEN</span>
+                                <h2>Eden Cheat Engine Pack</h2>
+                            </div>
+                            <span class="status-pill-badge active">● Installed</span>
+                        </div>
+                        <p class="card-desc">Cheat codes loaded automatically by Eden emulator for Super Mario Odyssey v1.0.0.</p>
+
+                        <div class="cheat-tags-list">
+                            <span class="cheat-tag">Infinite Health (Always 3/6 HP)</span>
+                            <span class="cheat-tag">9,999 Gold Coins</span>
+                            <span class="cheat-tag">Max Regional Coins</span>
+                            <span class="cheat-tag">999,999 Cap Throws &amp; Jumps</span>
+                            <span class="cheat-tag">Instant Respawn (Click L3)</span>
+                        </div>
+
+                        <div class="cheats-hint">
+                            <span>💡 You can also toggle individual cheats anytime in Eden: Right-click <strong>Super Mario Odyssey</strong> ➔ <strong>Properties</strong> ➔ <strong>Cheats</strong>.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- TOAST NOTIFICATION -->
+        <div class="toast" id="toast"></div>
+
+    </div>
+
+    <script src="app.js?v=1.4.0"></script>
+</body>
+</html>

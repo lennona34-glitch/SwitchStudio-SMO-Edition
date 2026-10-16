@@ -1,0 +1,36 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Studio runtime caches, extracted RomFS, and user backups
+cache/
+community_cache/
+backups/
+odyssey_romfs/
+odyssey_nca/
+extracted/
+extracted_nca/
+mod_backup/
+mod_build/
+output/
+
+# Copyrighted game dumps, archives, and user photos
+*.nsp
+*.xci
+*.nca
+*.szs
+*.bfres
+*.bfstm
+*.bfsar
+*.aras
+*.dds
+*.7z
+*.rar
+*.msi
+
+# OS / Editor metadata
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
