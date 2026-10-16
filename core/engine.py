@@ -2018,13 +2018,13 @@ class SwitchEngine:
             "name": "Wuhu Kingdom (Wii Sports Resort 3D Island)",
             "author": "Wuhu Team",
             "category": "3D Kingdom Overhaul",
-            "replaces": "Mushroom Kingdom",
+            "replaces": "Cap, Cascade & Sand Kingdoms (Wedge & Wuhu Island)",
             "size_mb": 162.8,
             "likes": 110,
             "views": 31000,
             "thumb": "thumbs/wuhu_kingdom.jpg",
-            "how_to_play": "Warp to the Mushroom Kingdom to explore the entire 3D Wuhu Island from Wii Sports Resort!",
-            "description": "Brings the iconic Wuhu Island from Wii Sports Resort into Super Mario Odyssey with custom Power Moons, volcano, town, and beach resort."
+            "how_to_play": "Click Launch Eden and start/resume! Uses a separate save at sd:/smo/WuhuKingdom/save/ so your 100% Odyssey save stays untouched.",
+            "description": "Brings the iconic Wuhu Island & Wedge Island from Wii Sports Resort into Super Mario Odyssey with custom Power Moons, volcano, town, and beach resort."
         },
         {
             "id": "KingdomPass",
@@ -2193,42 +2193,55 @@ class SwitchEngine:
                         shutil.move(mp, os.path.join(skip_dir, mfn))
 
         # 3. Normalize SystemData/WorldList.szs so v1.3.0 WorldResource.byml & WorldList.byml do not overflow WorldResourceHeap on v1.0.0
+        # IMPORTANT: Preserve the mod's own WorldResource.byml (which in mods like WuhuKingdom already prunes Cap/Waterfall/Sand
+        # and registers custom 3D island models), while stripping any v1.3.0-only or non-existent files across all Scenario lists.
         wl_mod_path = os.path.join(pack_dir, "romfs", "SystemData", "WorldList.szs")
         wl_van_path = os.path.join(ROMFS_ROOT, "SystemData", "WorldList.szs")
         if os.path.isfile(wl_mod_path) and os.path.isfile(wl_van_path):
             try:
                 wl_mod = oead.Sarc(oead.yaz0.decompress(open(wl_mod_path, "rb").read()))
-                wl_van = oead.Sarc(oead.yaz0.decompress(open(wl_van_path, "rb").read()))
-                bm_van_res = oead.byml.from_binary(wl_van.get_file("WorldResource.byml").data)
+                bm_mod_res = oead.byml.from_binary(wl_mod.get_file("WorldResource.byml").data)
                 stage_dir = os.path.join(pack_dir, "romfs", "StageData")
-                if os.path.isfile(os.path.join(stage_dir, "WaterfallWorldHomeStageMap.szs")):
-                    all_stage_text = ""
+                all_stage_text = ""
+                if os.path.isdir(stage_dir):
                     for sfn in os.listdir(stage_dir):
                         if sfn.endswith(".szs"):
                             sc = oead.Sarc(oead.yaz0.decompress(open(os.path.join(stage_dir, sfn), "rb").read()))
                             for sf in sc.get_files():
                                 if sf.name.endswith(".byml"):
                                     all_stage_text += " " + str(oead.byml.from_binary(sf.data))
-                    unused_prefixes = (
-                        "ObjectData/Lift2DEx", "ObjectData/WanwanClashEx", "ObjectData/TrexPoppunEx",
-                        "ObjectData/CapAppearExGround", "ObjectData/WindBlowEx", "ObjectData/DesSimWaterFall",
-                        "ObjectData/DesSimWaterfall", "ObjectData/WaterfallWorldHomeGround",
-                        "ObjectData/WaterfallWorldHomeBone", "ObjectData/WaterfallWorldHomeBreak",
-                        "ObjectData/WaterfallWorldHomeMiddleView", "ObjectData/WaterfallWorldHomeRock",
-                        "ObjectData/WaterfallWorldBreakParts", "ObjectData/WaterfallWorldHomeFloater",
-                        "ObjectData/WaterfallWorldHomePlant",
-                    )
-                    for item in bm_van_res:
-                        if item["WorldName"] == "Waterfall":
-                            new_res = []
-                            for r in item["WorldResource"]:
-                                full_name = r["Name"]
-                                rel = full_name + "." + r["Ext"]
+                unused_prefixes = (
+                    "ObjectData/Lift2DEx", "ObjectData/WanwanClashEx", "ObjectData/TrexPoppunEx",
+                    "ObjectData/CapAppearExGround", "ObjectData/WindBlowEx", "ObjectData/DesSimWaterFall",
+                    "ObjectData/DesSimWaterfall", "ObjectData/WaterfallWorldHomeGround",
+                    "ObjectData/WaterfallWorldHomeBone", "ObjectData/WaterfallWorldHomeBreak",
+                    "ObjectData/WaterfallWorldHomeMiddleView", "ObjectData/WaterfallWorldHomeRock",
+                    "ObjectData/WaterfallWorldBreakParts", "ObjectData/WaterfallWorldHomeFloater",
+                    "ObjectData/WaterfallWorldHomePlant",
+                )
+                for item in bm_mod_res:
+                    wname = str(item.get("WorldName", ""))
+                    for list_key in list(item.keys()):
+                        if list_key == "WorldName":
+                            continue
+                        orig_list = item[list_key]
+                        # Check if this world list is unpruned vanilla (> 500 items) and needs unused Cascade archive pruning
+                        prune_waterfall = (wname == "Waterfall" and len(orig_list) > 500)
+                        new_res = []
+                        for r in orig_list:
+                            full_name = str(r["Name"])
+                            rel = full_name + "." + str(r["Ext"])
+                            rel_os = rel.replace("/", os.sep)
+                            # Strip any v1.3.0-only Balloon World or missing archive that exists in neither pack romfs nor vanilla v1.0.0 romfs
+                            if not os.path.exists(os.path.join(pack_dir, "romfs", rel_os)) and not os.path.exists(os.path.join(ROMFS_ROOT, rel_os)):
+                                continue
+                            if prune_waterfall:
                                 base_obj = full_name.split("/")[-1]
-                                if full_name.startswith(unused_prefixes) and (base_obj not in all_stage_text) and not os.path.exists(os.path.join(pack_dir, "romfs", rel)):
+                                if full_name.startswith(unused_prefixes) and (base_obj not in all_stage_text) and not os.path.exists(os.path.join(pack_dir, "romfs", rel_os)):
                                     continue
-                                new_res.append(r)
-                            item["WorldResource"] = oead.byml.Array(new_res)
+                            new_res.append(r)
+                        item[list_key] = oead.byml.Array(new_res)
+
                 bm_mod_wl = oead.byml.from_binary(wl_mod.get_file("WorldList.byml").data)
                 for item in bm_mod_wl:
                     if "BalloonScenario" in item:
@@ -2236,7 +2249,7 @@ class SwitchEngine:
                 writer = oead.SarcWriter(endian=oead.Endianness.Little)
                 for f in wl_mod.get_files():
                     if f.name == "WorldResource.byml":
-                        writer.files[f.name] = oead.byml.to_binary(bm_van_res, big_endian=False)
+                        writer.files[f.name] = oead.byml.to_binary(bm_mod_res, big_endian=False)
                     elif f.name == "WorldList.byml":
                         writer.files[f.name] = oead.byml.to_binary(bm_mod_wl, big_endian=False)
                     else:
@@ -2285,7 +2298,7 @@ class SwitchEngine:
                     "size_mb": 0,
                     "likes": 0,
                     "views": 0,
-                    "thumb": "https://images.gamebanana.com/img/ss/mods/6575c7fd43d59.jpg",
+                    "thumb": "thumbs/yoshi_star.jpg",
                     "how_to_play": "Enabled in Eden LayeredFS load folder.",
                     "description": f"Local mod pack installed at {dname}.",
                     "installed": True,
@@ -2352,7 +2365,7 @@ class SwitchEngine:
         return results
 
     def _disable_other_kingdom_packs(self, target_pack_id):
-        """Automatically disables any other active 3D Kingdom Overhaul pack so WorldList.szs / ShineInfo.szs / exefs never conflict."""
+        """Automatically disables any other active community pack so texture packs, WorldList.szs, ShineInfo.szs, and exefs never conflict or overflow RAM."""
         disabled_names = []
         if not os.path.isdir(EDEN_LOAD_DIR):
             return disabled_names
@@ -2363,15 +2376,12 @@ class SwitchEngine:
             src_p = os.path.join(EDEN_LOAD_DIR, dname)
             if not os.path.isdir(src_p):
                 continue
-            # Check if it's a kingdom overhaul (has StageData, SystemData, or exefs)
-            has_stage = os.path.isdir(os.path.join(src_p, "romfs", "StageData")) or os.path.isdir(os.path.join(src_p, "romfs", "SystemData")) or os.path.isdir(os.path.join(src_p, "exefs"))
-            if has_stage:
-                dst_p = os.path.join(dis_root, dname)
-                if os.path.isdir(dst_p):
-                    shutil.rmtree(dst_p)
-                shutil.move(src_p, dst_p)
-                self._sync_pack_audio_and_exefs(dname, False)
-                disabled_names.append(dname)
+            dst_p = os.path.join(dis_root, dname)
+            if os.path.isdir(dst_p):
+                shutil.rmtree(dst_p)
+            shutil.move(src_p, dst_p)
+            self._sync_pack_audio_and_exefs(dname, False)
+            disabled_names.append(dname)
         return disabled_names
 
     def get_download_progress(self):
@@ -2387,11 +2397,10 @@ class SwitchEngine:
                 shutil.move(dis_path, active_path)
             elif not os.path.isdir(active_path):
                 raise FileNotFoundError(f"Pack '{pack_id}' is not installed yet.")
-            # If this pack is a 3D Kingdom Overhaul, auto-disable other active kingdom overhauls so they don't collide
-            is_kingdom = os.path.isdir(os.path.join(active_path, "romfs", "StageData")) or os.path.isdir(os.path.join(active_path, "romfs", "SystemData")) or os.path.isdir(os.path.join(active_path, "exefs"))
-            auto_off = self._disable_other_kingdom_packs(pack_id) if is_kingdom else []
+            # Auto-disable all other active community packs so texture packs & 3D kingdoms never collide
+            auto_off = self._disable_other_kingdom_packs(pack_id)
             self._sync_pack_audio_and_exefs(pack_id, True)
-            extra_note = f" (Auto-disabled {', '.join(auto_off)} to prevent kingdom conflicts)" if auto_off else ""
+            extra_note = f" (Auto-disabled {', '.join(auto_off)})" if auto_off else ""
             return {"success": True, "id": pack_id, "enabled": True, "message": f"Enabled '{pack_id}' in Eden!{extra_note}"}
         else:
             if os.path.isdir(active_path):
@@ -2526,12 +2535,11 @@ class SwitchEngine:
                 "stage": "normalizing"
             }
 
-            # Normalize for Switch v1.0.0 & auto-disable other 3D Kingdom Overhauls
+            # Normalize for Switch v1.0.0 & auto-disable other Community Packs
             self._normalize_pack_for_v100(active_path)
-            is_kingdom = os.path.isdir(os.path.join(active_path, "romfs", "StageData")) or os.path.isdir(os.path.join(active_path, "romfs", "SystemData")) or os.path.isdir(os.path.join(active_path, "exefs"))
-            auto_off = self._disable_other_kingdom_packs(pack_id) if is_kingdom else []
+            auto_off = self._disable_other_kingdom_packs(pack_id)
             self._sync_pack_audio_and_exefs(pack_id, True)
-            extra_note = f" (Auto-disabled {', '.join(auto_off)} so kingdoms don't conflict)" if auto_off else ""
+            extra_note = f" (Auto-disabled {', '.join(auto_off)} so packs don't conflict)" if auto_off else ""
 
             return {
                 "success": True,
