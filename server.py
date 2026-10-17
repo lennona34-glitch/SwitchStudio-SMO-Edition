@@ -649,6 +649,20 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
                 self.send_json({"success": False, "error": str(e)}, code=500)
             return
 
+        elif path == "/api/community/uninstall":
+            try:
+                req = json.loads(body.decode("utf-8")) if body else {}
+                pack_id = req.get("id")
+                if not pack_id:
+                    raise ValueError("No pack id specified")
+                res = engine.uninstall_community_pack(pack_id)
+                self.send_json(res)
+            except PermissionError:
+                self.send_json({"success": False, "error": "Eden is currently running and locking this pack's files — close Eden first before uninstalling!"}, code=500)
+            except Exception as e:
+                self.send_json({"success": False, "error": str(e)}, code=500)
+            return
+
         self.send_error(404, "Unknown API POST endpoint")
 
 def shutil_copy(f_src, f_dst):

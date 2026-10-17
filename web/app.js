@@ -2673,6 +2673,9 @@ function renderCommunityGrid() {
                 <button class="btn ${pack.enabled ? "btn-secondary" : "btn-action"} btn-sm btn-pack-toggle" data-id="${pack.id}" data-enable="${!pack.enabled}">
                     ${pack.enabled ? "⏸ Disable Pack" : "⚡ Enable in Eden"}
                 </button>
+                <button class="btn btn-outline btn-sm btn-pack-uninstall" data-id="${pack.id}" data-name="${encodeURIComponent(pack.name || pack.id)}" title="Uninstall pack and clear cached files" style="color:#ef4444; border-color:rgba(239,68,68,0.35);">
+                    🗑️ Uninstall
+                </button>
             `;
         } else if (isThisDownloading) {
             actionBtnHtml = `
@@ -2733,6 +2736,19 @@ function renderCommunityGrid() {
             });
         }
 
+        const btnUninstall = card.querySelector(".btn-pack-uninstall");
+        if (btnUninstall) {
+            btnUninstall.addEventListener("click", async () => {
+                const pName = decodeURIComponent(btnUninstall.dataset.name || btnUninstall.dataset.id);
+                if (!confirm(`Uninstall '${pName}'?\n\nThis will remove the pack from Eden and purge cached download archives so you can do a fresh re-download if desired.`)) {
+                    return;
+                }
+                btnUninstall.disabled = true;
+                btnUninstall.textContent = "⏳ Removing...";
+                await uninstallCommunityPack(btnUninstall.dataset.id);
+            });
+        }
+
         const btnInstall = card.querySelector(".btn-pack-install");
         if (btnInstall) {
             btnInstall.addEventListener("click", async () => {
@@ -2769,6 +2785,30 @@ async function toggleCommunityPack(packId, enable) {
         }
     } catch (e) {
         showToast("Error toggling pack: " + e.message);
+    }
+}
+
+async function uninstallCommunityPack(packId) {
+    try {
+        const res = await fetch("/api/community/uninstall", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: packId })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`🗑️ ${data.message}`);
+            await loadCommunityPacks();
+            if (communityViewMode === "live") {
+                await searchLiveCommunityMods(document.getElementById("communitySearchInput")?.value || "");
+            }
+        } else {
+            showToast(`❌ ${data.error || "Failed to uninstall pack"}`, 4500);
+            renderCommunityGrid();
+        }
+    } catch (e) {
+        showToast(`❌ Uninstall error: ${e.message}`, 4500);
+        renderCommunityGrid();
     }
 }
 

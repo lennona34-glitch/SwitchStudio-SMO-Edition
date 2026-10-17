@@ -1802,6 +1802,7 @@ class SwitchEngine:
         if not os.path.isfile(EDEN_EXE):
             raise FileNotFoundError("eden.exe not found")
 
+        os.environ["SDL_AUDIODRIVER"] = "directsound"
         self._ensure_eden_audio_sink()
         nsp_path = find_mario_nsp()
         eden_dir = os.path.dirname(EDEN_EXE)
@@ -2485,6 +2486,75 @@ class SwitchEngine:
                 shutil.move(active_path, dis_path)
             self._sync_pack_audio_and_exefs(pack_id, False)
             return {"success": True, "id": pack_id, "enabled": False, "message": f"Disabled '{pack_id}' — restored standard kingdom & audio."}
+
+    def uninstall_community_pack(self, pack_id):
+        """Cleanly uninstalls and deletes a community pack from Eden's active and disabled folders, removes synced audio/exefs, and purges its downloaded cache archive so the user can cleanly reinstall."""
+        active_path = os.path.join(EDEN_LOAD_DIR, pack_id)
+        dis_path = os.path.join(self._eden_disabled_dir(), pack_id)
+
+        # 1. Sync pack audio and exefs off before removing files so originals are restored
+        try:
+            self._sync_pack_audio_and_exefs(pack_id, False)
+        except Exception:
+            pass
+
+        # 2. Remove active and disabled directory
+        if os.path.isdir(active_path):
+            shutil.rmtree(active_path, ignore_errors=True)
+        if os.path.isdir(dis_path):
+            shutil.rmtree(dis_path, ignore_errors=True)
+
+        # 3. Clean any pack backup directory in ClaraMarioReshaped/romfs/SoundData/_pack_backup
+        clara_sd = os.path.join(EDEN_LOAD_DIR, self.active_mod_name, "romfs", "SoundData")
+        bak_dir = os.path.join(clara_sd, "_pack_backup", pack_id)
+        if os.path.isdir(bak_dir):
+            shutil.rmtree(bak_dir, ignore_errors=True)
+
+        # 4. Restore LunaKit to active if it was disabled by this pack's exefs
+        lk_active = os.path.join(EDEN_LOAD_DIR, "LunaKit")
+        lk_disabled = os.path.join(self._eden_disabled_dir(), "LunaKit")
+        if os.path.isdir(lk_disabled) and not os.path.isdir(lk_active):
+            try:
+                shutil.move(lk_disabled, lk_active)
+            except Exception:
+                pass
+
+        # 5. Clear cached zip / stage files in community_cache so fresh reinstall works
+        cache_dir = self._community_cache_dir()
+        if os.path.isdir(cache_dir):
+            for f in os.listdir(cache_dir):
+                fl = f.lower()
+                pid_l = pack_id.lower()
+                if pid_l in fl or f"_stage_{pack_id}" in f:
+                    p = os.path.join(cache_dir, f)
+                    try:
+                        if os.path.isdir(p):
+                            shutil.rmtree(p, ignore_errors=True)
+                        else:
+                            os.remove(p)
+                    except Exception:
+                        pass
+
+        # 6. Clear any sdmc mod saves or cache (e.g. sdmc/smo/{pack_id})
+        smo_sdmc = os.path.join(os.path.expanduser("~"), "AppData", "Roaming", "eden", "sdmc", "smo", pack_id)
+        if os.path.isdir(smo_sdmc):
+            shutil.rmtree(smo_sdmc, ignore_errors=True)
+
+        # 7. If it's a custom GameBanana pack (not in CURATED_COMMUNITY_PACKS), remove from metadata DB
+        is_curated = any(c["id"] == pack_id for c in self.CURATED_COMMUNITY_PACKS)
+        if not is_curated:
+            meta_db = self._load_community_metadata()
+            if pack_id in meta_db:
+                del meta_db[pack_id]
+                self._save_community_metadata(meta_db)
+
+        return {
+            "success": True,
+            "id": pack_id,
+            "installed": False,
+            "enabled": False,
+            "message": f"Successfully uninstalled '{pack_id}' and cleared its cached files."
+        }
 
     def install_community_pack(self, gb_id, pack_id=None):
         import urllib.request
