@@ -2417,35 +2417,40 @@ class SwitchEngine:
             item["enabled"] = is_active
             packs.append(item)
 
-        # Also list any extra folders installed in EDEN_LOAD_DIR or load_disabled
-        for root_dir, is_act in ((EDEN_LOAD_DIR, True), (disabled_root, False)):
-            if not os.path.isdir(root_dir):
+        # Also list any extra folders installed in EDEN_LOAD_DIR or load_disabled with stable sorting
+        extra_dnames = set()
+        if os.path.isdir(EDEN_LOAD_DIR):
+            extra_dnames.update(os.listdir(EDEN_LOAD_DIR))
+        if os.path.isdir(disabled_root):
+            extra_dnames.update(os.listdir(disabled_root))
+
+        for dname in sorted(extra_dnames, key=lambda s: s.lower()):
+            if dname in seen_ids or dname in (self.active_mod_name, "LunaKit", "Cheats"):
                 continue
-            for dname in sorted(os.listdir(root_dir)):
-                if dname in seen_ids or dname in (self.active_mod_name, "LunaKit", "Cheats"):
-                    continue
-                full_p = os.path.join(root_dir, dname)
-                if not os.path.isdir(full_p):
-                    continue
-                seen_ids.add(dname)
-                meta = meta_db.get(dname, {})
-                packs.append({
-                    "id": dname,
-                    "gb_id": meta.get("gb_id", 0),
-                    "name": meta.get("name", dname),
-                    "author": meta.get("author", "Installed Community Pack"),
-                    "category": meta.get("category", "Custom Mod Pack"),
-                    "replaces": "LayeredFS RomFS/ExeFS",
-                    "size_mb": 0,
-                    "likes": meta.get("likes", 0),
-                    "views": meta.get("views", 0),
-                    "thumb": meta.get("thumb", ""),
-                    "profile_url": meta.get("profile_url", f"https://gamebanana.com/mods/{meta.get('gb_id')}" if meta.get("gb_id") else ""),
-                    "how_to_play": "Enabled in Eden LayeredFS load folder.",
-                    "description": meta.get("description", f"Local mod pack installed at {dname}."),
-                    "installed": True,
-                    "enabled": is_act
-                })
+            act_p = os.path.join(EDEN_LOAD_DIR, dname)
+            dis_p = os.path.join(disabled_root, dname)
+            if not os.path.isdir(act_p) and not os.path.isdir(dis_p):
+                continue
+            seen_ids.add(dname)
+            is_act = os.path.isdir(act_p)
+            meta = meta_db.get(dname, {})
+            packs.append({
+                "id": dname,
+                "gb_id": meta.get("gb_id", 0),
+                "name": meta.get("name", dname),
+                "author": meta.get("author", "Installed Community Pack"),
+                "category": meta.get("category", "Custom Mod Pack"),
+                "replaces": "LayeredFS RomFS/ExeFS",
+                "size_mb": 0,
+                "likes": meta.get("likes", 0),
+                "views": meta.get("views", 0),
+                "thumb": meta.get("thumb", ""),
+                "profile_url": meta.get("profile_url", f"https://gamebanana.com/mods/{meta.get('gb_id')}" if meta.get("gb_id") else ""),
+                "how_to_play": "Enabled in Eden LayeredFS load folder.",
+                "description": meta.get("description", f"Local mod pack installed at {dname}."),
+                "installed": True,
+                "enabled": is_act
+            })
 
         return packs
 
