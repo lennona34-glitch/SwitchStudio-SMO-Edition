@@ -237,6 +237,14 @@ class SaveManager:
 
         doc["IsPayShineAllInAllWorld"] = True
 
+        # Ensure 100% compatibility with Super Mario Odyssey v1.0.0 by stripping v1.3.0 Balloon World & DLC keys
+        for bad_key in [
+            "FirstBalloonGame", "AocDigPointSaveData", "JumpingRopeBestCount2",
+            "IsExistRecordJumpingRope2", "BgSpecifyHistory", "FootPrintIdx"
+        ]:
+            if bad_key in doc:
+                del doc[bad_key]
+
         # 7. Serialize BYML & Wrap in 2,097,164 byte binary container with CRC32
         new_byml = oead.byml.to_binary(doc, big_endian=False, version=3)
         header16 = bytearray(raw[:16])
