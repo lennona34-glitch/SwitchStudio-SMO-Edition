@@ -2116,10 +2116,92 @@ class SwitchEngine:
         elif not any_active_pack_has_exefs and os.path.isdir(lk_disabled) and not os.path.isdir(lk_active):
             shutil.move(lk_disabled, lk_active)
 
+    def _apply_bps(self, source, patch):
+        def decode_vli(data, offset):
+            res = 0; shift = 0
+            while True:
+                b = data[offset]; offset += 1; res += (b & 0x7F) << shift
+                if b & 0x80: break
+                shift += 7; res += 1 << shift
+            return res, offset
+
+        offset = 4
+        src_size, offset = decode_vli(patch, offset)
+        dst_size, offset = decode_vli(patch, offset)
+        meta_size, offset = decode_vli(patch, offset)
+        offset += meta_size
+        target = bytearray(dst_size)
+        targetOffset = 0
+        sourceOffset = 0
+        targetRelativeOffset = 0
+        patch_len = len(patch) - 12
+        while offset < patch_len:
+            data, offset = decode_vli(patch, offset)
+            mode = data & 3
+            length = (data >> 2) + 1
+            if mode == 0:
+                for _ in range(length):
+                    target[targetOffset] = source[targetOffset]
+                    targetOffset += 1
+            elif mode == 1:
+                for _ in range(length):
+                    target[targetOffset] = patch[offset]
+                    targetOffset += 1
+                    offset += 1
+            elif mode == 2:
+                disp, offset = decode_vli(patch, offset)
+                sourceOffset += (-1 if (disp & 1) else 1) * (disp >> 1)
+                for _ in range(length):
+                    target[targetOffset] = source[sourceOffset]
+                    targetOffset += 1
+                    sourceOffset += 1
+            elif mode == 3:
+                disp, offset = decode_vli(patch, offset)
+                targetRelativeOffset += (-1 if (disp & 1) else 1) * (disp >> 1)
+                for _ in range(length):
+                    target[targetOffset] = target[targetRelativeOffset]
+                    targetOffset += 1
+                    targetRelativeOffset += 1
+        return bytes(target)
+
     def _normalize_pack_for_v100(self, pack_dir):
-        """Patches v1.3.0 BgmDataBase.szs for v1.0.0 safety and normalizes any custom .bfstm files to match vanilla channels & 48kHz."""
+        """Patches v1.3.0 BgmDataBase.szs for v1.0.0 safety, applies any .bps patches (e.g. ItemList.szs), and normalizes any custom .bfstm files."""
         if oead is None:
             return
+
+        # 0. Apply any bundled .bps patches (e.g. ItemList.szs.bps.100 in WuhuKingdom)
+        romfs_dir = os.path.join(pack_dir, "romfs")
+        if os.path.isdir(romfs_dir):
+            for root, dirs, files in os.walk(romfs_dir):
+                for fn in files:
+                    if fn.endswith(".bps.100") or fn.endswith(".bps"):
+                        bps_path = os.path.join(root, fn)
+                        target_fn = fn.replace(".bps.100", "").replace(".bps", "")
+                        target_path = os.path.join(root, target_fn)
+                        rel_path = os.path.relpath(target_path, romfs_dir)
+                        vanilla_src = os.path.join(ROMFS_ROOT, rel_path)
+                        if os.path.isfile(vanilla_src):
+                            try:
+                                src_raw = open(vanilla_src, "rb").read()
+                                src_dec = oead.yaz0.decompress(src_raw) if src_raw.startswith(b"Yaz0") else src_raw
+                                patch_bytes = open(bps_path, "rb").read()
+                                patched_dec = self._apply_bps(src_dec, patch_bytes)
+                                if src_raw.startswith(b"Yaz0"):
+                                    out_data = oead.yaz0.compress(patched_dec, data_alignment=0x80, level=7)
+                                else:
+                                    out_data = patched_dec
+                                with open(target_path, "wb") as out_f:
+                                    out_f.write(out_data)
+                            except Exception as e:
+                                print(f"Warning applying BPS patch {fn}: {e}")
+                        # Clean up redundant .bps.* files
+                        for f_bps in os.listdir(root):
+                            if f_bps.startswith(target_fn + ".bps"):
+                                try:
+                                    os.remove(os.path.join(root, f_bps))
+                                except OSError:
+                                    pass
+
         # 1. Strip v1.3.0-only PatchBgmBalloon from BgmDataBase.szs so v1.0.0 never crashes
         bgm_db = os.path.join(pack_dir, "romfs", "SoundData", "BgmDataBase.szs")
         if os.path.isfile(bgm_db):
