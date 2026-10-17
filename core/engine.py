@@ -1784,8 +1784,8 @@ class SwitchEngine:
         if not os.path.isfile(qt_ini):
             return
         import re
-        voicemod = any((p.info['name'] or '').lower().startswith('voicemod') for p in psutil.process_iter(['name']))
-        want = (b"false", b"2") if voicemod else (b"true", b"0")
+        audio_dev_issue = any((p.info['name'] or '').lower().startswith(('voicemod', 'umc', 'asio')) for p in psutil.process_iter(['name']))
+        want = (b"false", b"2") if audio_dev_issue else (b"true", b"0")
         try:
             with open(qt_ini, "r", encoding="utf-8", errors="replace", newline="") as f:
                 txt = f.read()
@@ -2191,6 +2191,22 @@ class SwitchEngine:
                     if os.path.isfile(mp):
                         os.makedirs(skip_dir, exist_ok=True)
                         shutil.move(mp, os.path.join(skip_dir, mfn))
+
+        # 2c. Remove incompatible exefs like subsdk4 (requires pm:shell / causes Launching... freeze)
+        exefs_dir = os.path.join(pack_dir, "exefs")
+        if os.path.isdir(exefs_dir) and os.path.isfile(os.path.join(exefs_dir, "subsdk4")):
+            shutil.rmtree(exefs_dir, ignore_errors=True)
+
+        # 2d. Remove non-custom v1.3.0 audio archives that collide with v1.0.0 sound drivers
+        sd_dir = os.path.join(pack_dir, "romfs", "SoundData")
+        if os.path.isdir(sd_dir):
+            for bad_audio in ("SeData.bfsar", "BgmDataBase.szs", "BossForest.aras", "SeResourceStdSystem.aras"):
+                bpath = os.path.join(sd_dir, bad_audio)
+                if os.path.isfile(bpath):
+                    try:
+                        os.remove(bpath)
+                    except OSError:
+                        pass
 
         # 3. Normalize SystemData/WorldList.szs so v1.3.0 WorldResource.byml & WorldList.byml do not overflow WorldResourceHeap on v1.0.0
         # IMPORTANT: Preserve the mod's own WorldResource.byml (which in mods like WuhuKingdom already prunes Cap/Waterfall/Sand
