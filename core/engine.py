@@ -2225,6 +2225,9 @@ class SwitchEngine:
                         if list_key == "WorldName":
                             continue
                         orig_list = item[list_key]
+                        # If the mod author already tailored/pruned this world list (< 450 items), preserve it completely!
+                        if len(orig_list) <= 450:
+                            continue
                         # Check if this world list is unpruned vanilla (> 500 items) and needs unused Cascade archive pruning
                         prune_waterfall = (wname == "Waterfall" and len(orig_list) > 500)
                         new_res = []
@@ -2241,6 +2244,11 @@ class SwitchEngine:
                                     continue
                             new_res.append(r)
                         item[list_key] = oead.byml.Array(new_res)
+
+                # Only write out WorldList.szs if any world list was actually modified (> 450 items)
+                has_pruned = any(len(item.get("WorldResource", [])) > 450 for item in bm_mod_res)
+                if not has_pruned:
+                    return
 
                 bm_mod_wl = oead.byml.from_binary(wl_mod.get_file("WorldList.byml").data)
                 for item in bm_mod_wl:
@@ -2260,10 +2268,34 @@ class SwitchEngine:
             except Exception as e:
                 print(f"Warning normalizing WorldList.szs: {e}")
 
+    def _metadata_path(self):
+        p = os.path.join(STUDIO_ROOT, "switch_studio", "config", "community_metadata.json")
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        return p
+
+    def _load_community_metadata(self):
+        mp = self._metadata_path()
+        if os.path.isfile(mp):
+            try:
+                with open(mp, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                pass
+        return {}
+
+    def _save_community_metadata(self, data):
+        mp = self._metadata_path()
+        try:
+            with open(mp, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"Error saving community metadata: {e}")
+
     def get_community_packs(self):
         disabled_root = self._eden_disabled_dir()
         packs = []
         seen_ids = set()
+        meta_db = self._load_community_metadata()
 
         for c in self.CURATED_COMMUNITY_PACKS:
             pid = c["id"]
@@ -2273,6 +2305,15 @@ class SwitchEngine:
             is_active = os.path.isdir(active_path)
             is_installed = is_active or os.path.isdir(dis_path)
             item = dict(c)
+            # Enrich with real remote metadata if available
+            meta = meta_db.get(pid, {})
+            if meta:
+                if meta.get("thumb"):
+                    item["thumb"] = meta["thumb"]
+                if meta.get("likes"):
+                    item["likes"] = meta["likes"]
+                if meta.get("views"):
+                    item["views"] = meta["views"]
             item["installed"] = is_installed
             item["enabled"] = is_active
             packs.append(item)
@@ -2288,19 +2329,21 @@ class SwitchEngine:
                 if not os.path.isdir(full_p):
                     continue
                 seen_ids.add(dname)
+                meta = meta_db.get(dname, {})
                 packs.append({
                     "id": dname,
-                    "gb_id": 0,
-                    "name": dname,
-                    "author": "Installed Community Pack",
-                    "category": "Custom Mod Pack",
+                    "gb_id": meta.get("gb_id", 0),
+                    "name": meta.get("name", dname),
+                    "author": meta.get("author", "Installed Community Pack"),
+                    "category": meta.get("category", "Custom Mod Pack"),
                     "replaces": "LayeredFS RomFS/ExeFS",
                     "size_mb": 0,
-                    "likes": 0,
-                    "views": 0,
-                    "thumb": "thumbs/yoshi_star.jpg",
+                    "likes": meta.get("likes", 0),
+                    "views": meta.get("views", 0),
+                    "thumb": meta.get("thumb", ""),
+                    "profile_url": meta.get("profile_url", f"https://gamebanana.com/mods/{meta.get('gb_id')}" if meta.get("gb_id") else ""),
                     "how_to_play": "Enabled in Eden LayeredFS load folder.",
-                    "description": f"Local mod pack installed at {dname}.",
+                    "description": meta.get("description", f"Local mod pack installed at {dname}."),
                     "installed": True,
                     "enabled": is_act
                 })
@@ -2319,6 +2362,8 @@ class SwitchEngine:
             data = json.loads(resp.read().decode("utf-8"))
 
         installed_map = {p["gb_id"]: p for p in self.get_community_packs() if p.get("gb_id")}
+        meta_db = self._load_community_metadata()
+        meta_changed = False
         results = []
         for rec in data.get("_aRecords", []):
             if rec.get("_sModelName") != "Mod":
@@ -2338,6 +2383,19 @@ class SwitchEngine:
                 if base and f530:
                     thumb = f"{base}/{f530}"
             safe_id = "".join(ch for ch in name if ch.isalnum())[:28] or f"GBMod_{gb_id}"
+            if safe_id not in meta_db or not meta_db[safe_id].get("thumb"):
+                meta_db[safe_id] = {
+                    "gb_id": gb_id,
+                    "name": name,
+                    "author": sub,
+                    "category": cat,
+                    "thumb": thumb,
+                    "likes": likes,
+                    "views": views,
+                    "description": f"Community pack '{name}' by {sub}.",
+                    "profile_url": rec.get("_sProfileUrl", f"https://gamebanana.com/mods/{gb_id}")
+                }
+                meta_changed = True
             existing = installed_map.get(gb_id)
             if existing:
                 safe_id = existing["id"]
@@ -2362,6 +2420,8 @@ class SwitchEngine:
                 "installed": is_inst,
                 "enabled": is_en
             })
+        if meta_changed:
+            self._save_community_metadata(meta_db)
         return results
 
     def _disable_other_kingdom_packs(self, target_pack_id):
@@ -2413,44 +2473,81 @@ class SwitchEngine:
     def install_community_pack(self, gb_id, pack_id=None):
         import urllib.request
         import zipfile
+        import threading
         gb_id = int(gb_id)
         curated = next((c for c in self.CURATED_COMMUNITY_PACKS if c["gb_id"] == gb_id), None)
         if not pack_id:
             pack_id = curated["id"] if curated else f"GBMod_{gb_id}"
 
-        # Check if already installed
-        active_path = os.path.join(EDEN_LOAD_DIR, pack_id)
-        dis_path = os.path.join(self._eden_disabled_dir(), pack_id)
-        if os.path.isdir(active_path) or os.path.isdir(dis_path):
-            return self.toggle_community_pack(pack_id, True)
+        # Prevent duplicate concurrent downloads of the same mod or multiple simultaneous downloads
+        if not hasattr(self, "_active_downloads"):
+            self._active_downloads = set()
+            self._dl_lock = threading.Lock()
 
-        # Fetch download link from GameBanana ProfilePage API
-        prof_url = f"https://gamebanana.com/apiv11/Mod/{gb_id}/ProfilePage"
-        req = urllib.request.Request(prof_url, headers={"User-Agent": "SwitchStudio/2.0"})
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            pdata = json.loads(resp.read().decode("utf-8"))
-
-        files = pdata.get("_aFiles", [])
-        if not files:
-            raise RuntimeError("No downloadable archive files found on this GameBanana mod page.")
-
-        # Prefer emulator edition or .zip if multiple files exist
-        chosen_file = files[0]
-        for fobj in files:
-            fname = (fobj.get("_sFile") or "").lower()
-            desc = (fobj.get("_sDescription") or "").lower()
-            if ("emulator" in fname or "emulator" in desc or "yuzu" in desc or "ryujinx" in desc) and fname.endswith(".zip"):
-                chosen_file = fobj
-                break
-            if fname.endswith(".zip") and not (chosen_file.get("_sFile") or "").lower().endswith(".zip"):
-                chosen_file = fobj
-
-        dl_url = chosen_file.get("_sDownloadUrl")
-        fname = chosen_file.get("_sFile") or f"mod_{gb_id}.zip"
-        expected_bytes = int(chosen_file.get("_nFilesize") or 0)
-        archive_path = os.path.join(self._community_cache_dir(), fname)
+        dl_key = str(gb_id)
+        with self._dl_lock:
+            if dl_key in self._active_downloads or getattr(self, "_dl_progress", {}).get("active"):
+                cur_name = getattr(self, "_dl_progress", {}).get("pack_id") or f"Mod #{gb_id}"
+                return {
+                    "success": False,
+                    "error": f"A download is already in progress ({cur_name}). Please wait for it to finish before starting another!"
+                }
+            self._active_downloads.add(dl_key)
 
         try:
+            # Check if already installed
+            active_path = os.path.join(EDEN_LOAD_DIR, pack_id)
+            dis_path = os.path.join(self._eden_disabled_dir(), pack_id)
+            if os.path.isdir(active_path) or os.path.isdir(dis_path):
+                return self.toggle_community_pack(pack_id, True)
+
+            # Fetch download link from GameBanana ProfilePage API
+            prof_url = f"https://gamebanana.com/apiv11/Mod/{gb_id}/ProfilePage"
+            req = urllib.request.Request(prof_url, headers={"User-Agent": "SwitchStudio/2.0"})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                pdata = json.loads(resp.read().decode("utf-8"))
+
+            # Save metadata for this pack so it renders with real name and thumbnail
+            meta_db = self._load_community_metadata()
+            imgs = pdata.get("_aPreviewMedia", {}).get("_aImages", [])
+            m_thumb = ""
+            if imgs:
+                b = imgs[0].get("_sBaseUrl", "")
+                f = imgs[0].get("_sFile530") or imgs[0].get("_sFile220") or imgs[0].get("_sFile", "")
+                m_thumb = f"{b}/{f}" if b and f else ""
+            meta_db[pack_id] = {
+                "gb_id": gb_id,
+                "name": pdata.get("_sName") or pack_id,
+                "author": pdata.get("_aSubmitter", {}).get("_sName", "GameBanana Creator"),
+                "category": pdata.get("_aRootCategory", {}).get("_sName", "Custom Mod"),
+                "thumb": m_thumb,
+                "likes": pdata.get("_nLikeCount", 0),
+                "views": pdata.get("_nViewCount", 0),
+                "description": (pdata.get("_sDescription") or f"Community pack '{pack_id}'.")[:120],
+                "profile_url": pdata.get("_sProfileUrl", f"https://gamebanana.com/mods/{gb_id}")
+            }
+            self._save_community_metadata(meta_db)
+
+            files = pdata.get("_aFiles", [])
+            if not files:
+                raise RuntimeError("No downloadable archive files found on this GameBanana mod page.")
+
+            # Prefer emulator edition or .zip if multiple files exist
+            chosen_file = files[0]
+            for fobj in files:
+                fname = (fobj.get("_sFile") or "").lower()
+                desc = (fobj.get("_sDescription") or "").lower()
+                if ("emulator" in fname or "emulator" in desc or "yuzu" in desc or "ryujinx" in desc) and fname.endswith(".zip"):
+                    chosen_file = fobj
+                    break
+                if fname.endswith(".zip") and not (chosen_file.get("_sFile") or "").lower().endswith(".zip"):
+                    chosen_file = fobj
+
+            dl_url = chosen_file.get("_sDownloadUrl")
+            fname = chosen_file.get("_sFile") or f"mod_{gb_id}.zip"
+            expected_bytes = int(chosen_file.get("_nFilesize") or 0)
+            archive_path = os.path.join(self._community_cache_dir(), fname)
+
             if not os.path.isfile(archive_path) or (expected_bytes > 0 and os.path.getsize(archive_path) < expected_bytes):
                 dl_req = urllib.request.Request(dl_url, headers={"User-Agent": "SwitchStudio/2.0"})
                 with urllib.request.urlopen(dl_req, timeout=600) as r, open(archive_path, "wb") as out_f:
@@ -2550,5 +2647,7 @@ class SwitchEngine:
                 "message": f"Downloaded, normalized & activated '{pack_id}' in Eden!{extra_note}"
             }
         finally:
+            with self._dl_lock:
+                self._active_downloads.discard(dl_key)
             self._dl_progress = {"active": False, "pack_id": "", "downloaded_mb": 0.0, "total_mb": 0.0, "percent": 0, "stage": ""}
 

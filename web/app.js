@@ -2651,10 +2651,12 @@ function renderCommunityGrid() {
         return;
     }
 
+    const isAnyDownloading = window._activeDownloads && window._activeDownloads.size > 0;
+
     list.forEach(pack => {
         const card = document.createElement("div");
         card.className = `community-pack-card ${pack.enabled ? "pack-active" : ""}`;
-        const thumbUrl = pack.thumb || "thumbs/yoshi_star.jpg";
+        const thumbUrl = pack.thumb || "";
         const statusChip = pack.enabled
             ? `<span class="pack-status-chip active">● ACTIVE IN EDEN</span>`
             : (pack.installed ? `<span class="pack-status-chip installed">INSTALLED (OFF)</span>` : `<span class="pack-status-chip">GAMEBANANA #${pack.gb_id}</span>`);
@@ -2664,10 +2666,24 @@ function renderCommunityGrid() {
         const viewsInfo = pack.views ? `<span>👁️ ${pack.views.toLocaleString()}</span>` : "";
 
         let actionBtnHtml = "";
+        const isThisDownloading = window._activeDownloads && window._activeDownloads.has(String(pack.gb_id));
+
         if (pack.installed) {
             actionBtnHtml = `
                 <button class="btn ${pack.enabled ? "btn-secondary" : "btn-action"} btn-sm btn-pack-toggle" data-id="${pack.id}" data-enable="${!pack.enabled}">
                     ${pack.enabled ? "⏸ Disable Pack" : "⚡ Enable in Eden"}
+                </button>
+            `;
+        } else if (isThisDownloading) {
+            actionBtnHtml = `
+                <button class="btn btn-action btn-sm" disabled style="opacity:0.8;">
+                    ⏳ Downloading...
+                </button>
+            `;
+        } else if (isAnyDownloading) {
+            actionBtnHtml = `
+                <button class="btn btn-outline btn-sm" disabled title="Another download is in progress">
+                    ⏳ Waiting...
                 </button>
             `;
         } else {
@@ -2678,9 +2694,16 @@ function renderCommunityGrid() {
             `;
         }
 
+        const thumbImgHtml = thumbUrl ? `
+            <img src="${thumbUrl}" alt="${pack.name}" loading="lazy" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+            <div class="pack-thumb-fallback" style="display:none; width:100%; height:100%; align-items:center; justify-content:center; background:linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.95)); font-size:36px;">🎮</div>
+        ` : `
+            <div class="pack-thumb-fallback" style="display:flex; width:100%; height:100%; align-items:center; justify-content:center; background:linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.95)); font-size:36px;">🎮</div>
+        `;
+
         card.innerHTML = `
             <div class="pack-thumb-wrap">
-                <img src="${thumbUrl}" alt="${pack.name}" loading="lazy" onerror="this.onerror=null;this.src='thumbs/yoshi_star.jpg';">
+                ${thumbImgHtml}
                 <span class="pack-cat-tag">${pack.category || "Mod Pack"}</span>
                 ${statusChip}
             </div>
@@ -2749,15 +2772,32 @@ async function toggleCommunityPack(packId, enable) {
     }
 }
 
+if (!window._activeDownloads) {
+    window._activeDownloads = new Set();
+}
+
 async function installCommunityPack(gbId, packId, btnEl) {
+    const key = String(gbId);
+    if (window._activeDownloads.has(key)) {
+        showToast("⚠️ This mod is already downloading!");
+        return;
+    }
+    if (window._activeDownloads.size > 0) {
+        showToast("⚠️ Another download is currently in progress. Please wait!");
+        return;
+    }
+
+    window._activeDownloads.add(key);
+    renderCommunityGrid();
     showToast(`⬇️ Downloading GameBanana Mod #${gbId} and normalizing for Switch v1.0.0...`);
+
     let pollTimer = null;
-    if (btnEl) {
-        pollTimer = setInterval(async () => {
-            try {
-                const pr = await fetch("/api/community/progress");
-                const pd = await pr.json();
-                if (pd && pd.active && (!pd.pack_id || pd.pack_id === packId)) {
+    pollTimer = setInterval(async () => {
+        try {
+            const pr = await fetch("/api/community/progress");
+            const pd = await pr.json();
+            if (pd && pd.active && (!pd.pack_id || pd.pack_id === packId)) {
+                if (btnEl) {
                     if (pd.stage === "downloading" && pd.total_mb > 0) {
                         btnEl.textContent = `⬇️ ${pd.downloaded_mb} / ${pd.total_mb} MB (${pd.percent}%)`;
                     } else if (pd.stage === "extracting") {
@@ -2766,9 +2806,10 @@ async function installCommunityPack(gbId, packId, btnEl) {
                         btnEl.textContent = `⚙️ Normalizing Audio & RomFS...`;
                     }
                 }
-            } catch (_) {}
-        }, 800);
-    }
+            }
+        } catch (_) {}
+    }, 800);
+
     try {
         const res = await fetch("/api/community/install", {
             method: "POST",
@@ -2777,6 +2818,8 @@ async function installCommunityPack(gbId, packId, btnEl) {
         });
         const data = await res.json();
         if (pollTimer) clearInterval(pollTimer);
+        window._activeDownloads.delete(key);
+
         if (data.success) {
             showToast(`🎉 ${data.message}`);
             await loadCommunityPacks();
@@ -2787,22 +2830,17 @@ async function installCommunityPack(gbId, packId, btnEl) {
                         p.enabled = true;
                     }
                 });
-                renderCommunityGrid();
             }
+            renderCommunityGrid();
         } else {
             showToast(`⚠️ Install failed: ${data.error}`);
-            if (btnEl) {
-                btnEl.disabled = false;
-                btnEl.textContent = "⬇️ 1-Click Download & Activate";
-            }
+            renderCommunityGrid();
         }
     } catch (e) {
         if (pollTimer) clearInterval(pollTimer);
+        window._activeDownloads.delete(key);
         showToast("Download error: " + e.message);
-        if (btnEl) {
-            btnEl.disabled = false;
-            btnEl.textContent = "⬇️ 1-Click Download & Activate";
-        }
+        renderCommunityGrid();
     }
 }
 
