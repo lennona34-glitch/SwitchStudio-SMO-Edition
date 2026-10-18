@@ -84,7 +84,7 @@ def _parse(d):
                 codec=codec, loop=loop, channels=channels, regions=regions, rate=rate, loop_start=loop_start,
                 samples=samples, block_count=block_count, block_size=block_size, block_samples=block_samples,
                 last_size=last_size, last_samples=last_samples, last_padded=last_padded,
-                seek_info_size=seek_info_size, seek_interval=seek_interval, chans=chans)
+                seek_info_size=seek_info_size, seek_interval=seek_interval, chans=chans, chan_table_off=table)
 
 
 def convert_wav_to_nx_pcm16_bytes(wav_path, template, file_id=None):
@@ -395,13 +395,14 @@ def rebuild_prefetch_archive(vanilla_aras, vanilla_stream_dir, deployed_stream_d
                 rep["rebuilt"].append(name)
             continue
         dp = _parse(bytes(d[:0x4000]))
-        id_pos = dp["stream_start"] + ID_OFFSET
-        if struct.unpack_from("<I", d, id_pos)[0] != vid:
-            struct.pack_into("<I", d, id_pos, vid)
-            with open(dpath + ".id_tmp", "wb") as f:
-                f.write(d)
-            os.replace(dpath + ".id_tmp", dpath)
-            rep["ids_fixed"].append(name)
+        if dp.get("chan_table_off", 0) - dp["stream_start"] >= 80:
+            id_pos = dp["stream_start"] + ID_OFFSET
+            if struct.unpack_from("<I", d, id_pos)[0] != vid:
+                struct.pack_into("<I", d, id_pos, vid)
+                with open(dpath + ".id_tmp", "wb") as f:
+                    f.write(d)
+                os.replace(dpath + ".id_tmp", dpath)
+                rep["ids_fixed"].append(name)
 
         e = entries.get(vid)
         if e is None:

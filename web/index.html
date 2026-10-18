@@ -670,12 +670,18 @@
                             </div>
                         </div>
 
-                        <!-- ACTION BUTTON -->
-                        <div class="save-actions-wrap">
+                        <!-- ACTION BUTTONS -->
+                        <div class="save-actions-wrap" style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
                             <button class="btn btn-gold-lg" id="btnInject100">
                                 <span class="btn-icon">⚡</span> Inject 100% Complete Save
                             </button>
-                            <span class="safe-note">🛡️ Automatic safe backup created before any file is touched.</span>
+                            <button class="btn btn-danger-lg" id="btnDeleteSlot" style="background:rgba(220,38,38,0.25); border:1px solid #ef4444; color:#fca5a5; padding:10px 16px; border-radius:8px; font-weight:600; cursor:pointer;">
+                                🗑️ Delete Slot <span id="deleteSlotNum">1</span>
+                            </button>
+                            <button class="btn btn-secondary-sm" id="btnClearAllSaves" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:#cbd5e1; padding:8px 14px; border-radius:6px; cursor:pointer; font-size:12px;">
+                                ✨ Reset / Clear All Saves (Start Fresh)
+                            </button>
+                            <span class="safe-note" style="width:100%; margin-top:4px;">🛡️ Automatic safe backup created before any file is touched or deleted.</span>
                         </div>
 
                         <!-- UNLOCKS BREAKDOWN CHECKLIST -->

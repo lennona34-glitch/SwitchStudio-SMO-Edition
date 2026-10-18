@@ -2287,6 +2287,62 @@ function initSavesAndMods() {
         });
     }
 
+    const btnDelete = document.getElementById("btnDeleteSlot");
+    if (btnDelete) {
+        btnDelete.addEventListener("click", async () => {
+            if (!confirm(`Delete Save Slot ${selectedSaveSlot} and reset it to empty?\n\n(A safe backup will automatically be created first)`)) {
+                return;
+            }
+            btnDelete.disabled = true;
+            try {
+                const res = await fetch("/api/saves/delete", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ slot: selectedSaveSlot })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`🗑️ Slot ${selectedSaveSlot} deleted and reset to empty!`);
+                    await loadSavesAndMods();
+                } else {
+                    showToast(`Delete failed: ${data.error || "Unknown error"}`);
+                }
+            } catch (err) {
+                showToast(`Error: ${err.message}`);
+            } finally {
+                btnDelete.disabled = false;
+            }
+        });
+    }
+
+    const btnClearAll = document.getElementById("btnClearAllSaves");
+    if (btnClearAll) {
+        btnClearAll.addEventListener("click", async () => {
+            if (!confirm(`Reset ALL save files in Eden?\n\nOdyssey will start as a brand new fresh game on next launch.\n\n(A full safe backup will be created first)`)) {
+                return;
+            }
+            btnClearAll.disabled = true;
+            try {
+                const res = await fetch("/api/saves/delete", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ slot: "all" })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`✨ All saves cleared! Fresh game ready to start.`);
+                    await loadSavesAndMods();
+                } else {
+                    showToast(`Failed: ${data.error || "Unknown error"}`);
+                }
+            } catch (err) {
+                showToast(`Error: ${err.message}`);
+            } finally {
+                btnClearAll.disabled = false;
+            }
+        });
+    }
+
     const btnBackup = document.getElementById("btnManualBackup");
     if (btnBackup) {
         btnBackup.addEventListener("click", async () => {
@@ -2365,22 +2421,61 @@ function renderSlotsGrid(slots) {
     if (!grid) return;
     grid.innerHTML = "";
 
+    const deleteSlotLabel = document.getElementById("deleteSlotNum");
+    if (deleteSlotLabel) {
+        deleteSlotLabel.textContent = selectedSaveSlot;
+    }
+
     slots.forEach(slot => {
         const card = document.createElement("div");
         card.className = "slot-card" + (slot.slot === selectedSaveSlot ? " active" : "");
+        const isPopulated = (slot.stage && slot.stage !== "Empty" && slot.kingdom !== "None");
         card.innerHTML = `
-            <div class="slot-card-num">Slot ${slot.slot}</div>
+            <div class="slot-card-num" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>Slot ${slot.slot}</span>
+                ${isPopulated ? `<button class="slot-quick-del" title="Delete Slot ${slot.slot}" data-slot="${slot.slot}" style="background:rgba(239,68,68,0.2); border:1px solid rgba(239,68,68,0.4); color:#fca5a5; cursor:pointer; font-size:11px; padding:1px 5px; border-radius:4px;">🗑️</button>` : ''}
+            </div>
             <div class="slot-card-stage" title="${slot.stage}">${slot.kingdom || "Empty"}</div>
             <div class="slot-card-meta">
                 <span class="slot-card-moons">🌕 ${slot.moons}</span>
                 <span class="slot-card-coins">💰 ${slot.coins}</span>
             </div>
         `;
-        card.addEventListener("click", () => {
+        card.addEventListener("click", (e) => {
+            if (e.target.closest(".slot-quick-del")) return;
             selectedSaveSlot = slot.slot;
+            if (deleteSlotLabel) deleteSlotLabel.textContent = selectedSaveSlot;
             document.querySelectorAll(".slot-card").forEach(c => c.classList.remove("active"));
             card.classList.add("active");
         });
+
+        const delBtn = card.querySelector(".slot-quick-del");
+        if (delBtn) {
+            delBtn.addEventListener("click", async (e) => {
+                e.stopPropagation();
+                if (!confirm(`Delete Save Slot ${slot.slot} and reset it to empty?\n\n(A safe backup will be created first)`)) {
+                    return;
+                }
+                delBtn.disabled = true;
+                try {
+                    const res = await fetch("/api/saves/delete", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ slot: slot.slot })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        showToast(`🗑️ Slot ${slot.slot} deleted!`);
+                        await loadSavesAndMods();
+                    } else {
+                        showToast(`Failed: ${data.error || "Unknown error"}`);
+                    }
+                } catch (err) {
+                    showToast(`Error: ${err.message}`);
+                }
+            });
+        }
+
         grid.appendChild(card);
     });
 }

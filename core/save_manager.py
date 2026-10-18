@@ -287,3 +287,44 @@ class SaveManager:
             "achievements": 61,
             "music_tracks": 79
         }
+
+    def delete_save(self, slot: Any = 1) -> Dict[str, Any]:
+        """Backs up existing saves and deletes the chosen slot (or all slots if slot='all' or 0)."""
+        if str(slot).lower() in ("all", "0"):
+            backup_path = self.backup_saves(label="pre_delete_all")
+            deleted_count = 0
+            if os.path.isdir(self.save_dir):
+                for fn in os.listdir(self.save_dir):
+                    if fn.endswith(".bin"):
+                        try:
+                            os.remove(os.path.join(self.save_dir, fn))
+                            deleted_count += 1
+                        except OSError:
+                            pass
+            return {
+                "success": True,
+                "slot": "all",
+                "backup_path": backup_path,
+                "deleted_count": deleted_count,
+                "message": "All saves cleared. Super Mario Odyssey will start a fresh new adventure!"
+            }
+
+        slot_int = int(slot)
+        if slot_int < 1 or slot_int > 5:
+            raise ValueError(f"Invalid slot: {slot}. Must be 1-5.")
+
+        backup_path = self.backup_saves(label=f"pre_delete_slot{slot_int}")
+        target_file = os.path.join(self.save_dir, f"File{slot_int}.bin")
+        deleted = False
+        if os.path.isfile(target_file):
+            os.remove(target_file)
+            deleted = True
+
+        return {
+            "success": True,
+            "slot": slot_int,
+            "deleted": deleted,
+            "backup_path": backup_path,
+            "message": f"Save Slot {slot_int} has been deleted and reset to empty."
+        }
+

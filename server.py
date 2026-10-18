@@ -610,6 +610,16 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
                 self.send_json({"success": False, "error": str(e)}, code=500)
             return
 
+        elif path == "/api/saves/delete":
+            try:
+                req = json.loads(body.decode("utf-8")) if body else {}
+                slot = req.get("slot", 1)
+                res = save_manager.delete_save(slot=slot)
+                self.send_json(res)
+            except Exception as e:
+                self.send_json({"success": False, "error": str(e)}, code=500)
+            return
+
         elif path == "/api/mario/scale":
             try:
                 req = json.loads(body.decode("utf-8")) if body else {}

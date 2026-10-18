@@ -2070,6 +2070,8 @@ class SwitchEngine:
         if os.path.isdir(pack_stm):
             os.makedirs(clara_stm, exist_ok=True)
             os.makedirs(bak_dir, exist_ok=True)
+            pack_aras_path = os.path.join(pack_sd, "BgmResourceStdPrefetch.aras")
+            pack_has_own_aras = os.path.isfile(pack_aras_path)
             if enabled:
                 for fn in sorted(os.listdir(pack_stm)):
                     if not fn.endswith(".bfstm"):
@@ -2080,10 +2082,15 @@ class SwitchEngine:
                     if os.path.isfile(dst_f) and not os.path.isfile(bak_f):
                         shutil.copy2(dst_f, bak_f)
                     shutil.copy2(src_f, dst_f)
-                self.rebuild_prefetch("bgm")
-                clara_aras = os.path.join(clara_sd, "BgmResourceStdPrefetch.aras")
-                if os.path.isfile(clara_aras):
-                    shutil.copy2(clara_aras, os.path.join(pack_sd, "BgmResourceStdPrefetch.aras"))
+                if pack_has_own_aras:
+                    # Mod brings its own dedicated prefetch table (e.g. WuhuKingdom stream-on-demand)
+                    clara_aras = os.path.join(clara_sd, "BgmResourceStdPrefetch.aras")
+                    shutil.copy2(pack_aras_path, clara_aras)
+                else:
+                    self.rebuild_prefetch("bgm")
+                    clara_aras = os.path.join(clara_sd, "BgmResourceStdPrefetch.aras")
+                    if os.path.isfile(clara_aras):
+                        shutil.copy2(clara_aras, pack_aras_path)
             else:
                 for fn in sorted(os.listdir(pack_stm)):
                     if not fn.endswith(".bfstm"):
@@ -2252,7 +2259,7 @@ class SwitchEngine:
                         subprocess.run([CONVERT_AUDIO_EXE, clean_wav, tmp_bfstm], cwd=TOOLBOX_DIR, check=True)
                         self._finalize_bfstm(tmp_bfstm, fn, sfx=False)
                         shutil.copy2(tmp_bfstm, fp)
-                    else:
+                    elif bfstm_nx.is_big_endian_bfstm(fp):
                         self._finalize_bfstm(fp, fn, sfx=False)
                 except Exception as e:
                     print(f"Warning normalizing {fn}: {e}")
