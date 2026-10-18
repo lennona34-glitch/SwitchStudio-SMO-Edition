@@ -1354,7 +1354,21 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .vm-deploy-group .compact-select {
-    max-width: 220px;
+    max-width: 320px;
+    font-size: 12px;
+}
+
+.vm-deploy-group .highlighted-target-select {
+    border-color: rgba(255, 215, 0, 0.5);
+    background: #0f1422;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.15);
+    transition: all 0.2s ease;
+}
+
+.vm-deploy-group .highlighted-target-select:focus,
+.vm-deploy-group .highlighted-target-select:hover {
+    border-color: #ffd700;
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.35);
 }
 
 .vm-deploy-group label {

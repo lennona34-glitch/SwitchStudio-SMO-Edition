@@ -60,6 +60,8 @@ EXACT_TITLES = {
     "WsSyPlayerMiss": "Mario Miss / Lose Life",
     "WsSyPlayerDead2D": "8-Bit Mario Dies (2D)",
     # Iconic Mario Voice
+    "WsSyE3Title": "⭐ Mario: 'Super Mario Odyssey!' (Title Call)",
+    "WsSyE3TitleStart": "Title Screen: Game Start Chime (Press A)",
     "WsrPvRcGetPrize": "Mario Voice: Got a Prize / Moon!",
     "WsPvJump00": "Mario Voice: Jump ('Yah!')",
     "WsPvJump01": "Mario Voice: Jump ('Wah!')",
@@ -83,7 +85,11 @@ EXACT_TITLES = {
 
 def classify_and_format_sfx(name, source_archive):
     """Returns (category, friendly_title, priority_score) for an internal sound symbol name."""
-    if source_archive == "BgmResourceStd2nd.aras" or name.startswith("WsdRsBgm") or name == "WsdLifeMaxUp":
+    if name == "WsSyE3Title":
+        return "Mario Voice", EXACT_TITLES["WsSyE3Title"], 1
+    elif name == "WsSyE3TitleStart":
+        return "Menus & UI", EXACT_TITLES["WsSyE3TitleStart"], 38
+    elif source_archive == "BgmResourceStd2nd.aras" or name.startswith("WsdRsBgm") or name == "WsdLifeMaxUp":
         cat = "Fanfares & Moons"
         prio = 10
     elif "Pv" in name[:6]:

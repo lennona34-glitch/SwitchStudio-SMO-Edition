@@ -1560,6 +1560,13 @@ async function loadSfx() {
 
             initSfxDropzone();
         }
+
+        if (!activeSfxTrack && sfxTracks.length > 0) {
+            const titleCall = sfxTracks.find(t => t.symbol === "WsSyE3Title" || (t.filename && t.filename.includes("WsSyE3Title")));
+            if (titleCall) {
+                playSfxTrack(titleCall, false);
+            }
+        }
     } catch (e) {
         console.error("Failed to load SFX tracks", e);
     }
@@ -1646,7 +1653,7 @@ function filterSfx() {
     renderSfxList(filtered);
 }
 
-function playSfxTrack(track) {
+function playSfxTrack(track, shouldPlay = true) {
     activeSfxTrack = track;
     let activeEl = null;
     document.querySelectorAll("#sfxTrackList .track-item").forEach(it => {
@@ -1665,10 +1672,22 @@ function playSfxTrack(track) {
         badgeEl.textContent = `${(track.category || "SFX").toUpperCase()} • ${track.codec === 1 ? "16-BIT PCM" : "NINTENDO DSP-ADPCM"}${track.is_modded ? " • ✨ MODDED" : ""}`;
     }
 
+    const targetSelect = document.getElementById("voiceTargetSelect");
+    if (targetSelect) {
+        const optionExists = Array.from(targetSelect.options).some(o => o.value === track.filename);
+        if (optionExists) {
+            targetSelect.value = track.filename;
+        } else {
+            targetSelect.value = "__active__";
+        }
+    }
+
     const audio = document.getElementById("sfxAudioPlayer");
     audio.src = `/api/sfx/play?track=${encodeURIComponent(track.filename)}&t=${Date.now()}`;
     audio.load();
-    audio.play().catch(e => console.log("SFX play blocked", e));
+    if (shouldPlay) {
+        audio.play().catch(e => console.log("SFX play blocked", e));
+    }
 }
 
 function initSfxDropzone() {
@@ -1886,6 +1905,20 @@ function initVoiceMod() {
             btnDeployVocal.textContent = "⚡ Deploy Voice into Game";
         }
     });
+
+    const voiceTargetSelectEl = document.getElementById("voiceTargetSelect");
+    if (voiceTargetSelectEl) {
+        voiceTargetSelectEl.addEventListener("change", () => {
+            const val = voiceTargetSelectEl.value;
+            if (val && val !== "__active__") {
+                const matched = sfxTracks.find(t => t.filename === val);
+                if (matched) {
+                    playSfxTrack(matched, true);
+                    showToast(`Loaded ${matched.title} for audition & replacement!`);
+                }
+            }
+        });
+    }
 }
 
 function drawVisualizer(analyser, canvas, ctx) {

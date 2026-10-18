@@ -565,16 +565,21 @@
                             </div>
                             <div class="vm-deploy-group" id="vmDeployRow" style="display:flex;">
                                 <label>Target FX:</label>
-                                <select id="voiceTargetSelect" class="compact-select">
+                                <select id="voiceTargetSelect" class="compact-select highlighted-target-select">
                                     <option value="__active__">🎯 Currently Selected SFX (Left Panel)</option>
-                                    <option value="fwav:SeResourceStd2nd.aras:35136:1691:WsPvJump00">🍄 Mario Jump ('Yah!')</option>
-                                    <option value="fwav:SeResourceStd2nd.aras:35136:1699:WsPvJumpHigh00">🍄 Mario Triple Jump ('Wahoo!')</option>
-                                    <option value="fwav:SeResourceStd2nd.aras:35136:1698:WsPvJumpBroad">🍄 Mario Long Jump ('Yahoooo!')</option>
-                                    <option value="fwav:SeResourceStd2nd.aras:35136:183:WsSsCoin">🪙 Gold Coin Pickup</option>
-                                    <option value="fwav:BgmResourceStd2nd.aras:8576:1:WsdRsBgmJgMainMoon">🌙 Power Moon Get Fanfare</option>
-                                    <option value="fwav:BgmResourceStd2nd.aras:8576:7:WsdLifeMaxUp">❤️ Life-Up Heart Fanfare</option>
-                                    <option value="StSyD003_DemoHackFirstFrog.bfstm">🐸 Frog Capture Cutscene</option>
-                                    <option value="StSyD019_KoopaHack.bfstm">🐉 Bowser Capture Roar</option>
+                                    <optgroup label="🌟 Featured Highlights" style="background:#0f172a; color:#38ef7d; font-weight:700;">
+                                        <option value="fwav:SeResourceStdSystem.aras:7808:21:WsSyE3Title" style="font-weight:700; color:#ffd700; background:#1e1b4b;" selected>⭐ Mario: 'Super Mario Odyssey!' (Title Call)</option>
+                                    </optgroup>
+                                    <optgroup label="🍄 Mario Voice &amp; Gameplay" style="background:#0f172a; color:#94a3b8;">
+                                        <option value="fwav:SeResourceStd2nd.aras:35136:1691:WsPvJump00">🍄 Mario Jump ('Yah!')</option>
+                                        <option value="fwav:SeResourceStd2nd.aras:35136:1699:WsPvJumpHigh00">🍄 Mario Triple Jump ('Wahoo!')</option>
+                                        <option value="fwav:SeResourceStd2nd.aras:35136:1698:WsPvJumpBroad">🍄 Mario Long Jump ('Yahoooo!')</option>
+                                        <option value="fwav:SeResourceStd2nd.aras:35136:183:WsSsCoin">🪙 Gold Coin Pickup</option>
+                                        <option value="fwav:BgmResourceStd2nd.aras:8576:1:WsdRsBgmJgMainMoon">🌙 Power Moon Get Fanfare</option>
+                                        <option value="fwav:BgmResourceStd2nd.aras:8576:7:WsdLifeMaxUp">❤️ Life-Up Heart Fanfare</option>
+                                        <option value="StSyD003_DemoHackFirstFrog.bfstm">🐸 Frog Capture Cutscene</option>
+                                        <option value="StSyD019_KoopaHack.bfstm">🐉 Bowser Capture Roar</option>
+                                    </optgroup>
                                 </select>
                                 <button class="btn btn-action btn-sm" id="btnDeployVocal" disabled>⚡ Deploy Voice into Game</button>
                             </div>
