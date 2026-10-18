@@ -2264,23 +2264,22 @@ class SwitchEngine:
                 except Exception as e:
                     print(f"Warning normalizing {fn}: {e}")
 
-        # 2b. If this is a 3D Kingdom Overhaul pack, move any bundled Mario.szs / MarioFace.szs / MarioHeadTexture.szs
-        # aside so they never override the user's custom ClaraMarioReshaped face, outfit, or Tiny/Giant Mario scale.
-        if os.path.isdir(os.path.join(pack_dir, "romfs", "StageData")):
-            obj_dir = os.path.join(pack_dir, "romfs", "ObjectData")
-            skip_dir = os.path.join(pack_dir, "romfs", "_skipped_mario_models")
-            protected_mario = {
-                "Mario.szs", "MarioHigh.szs", "MarioFace.szs", "MarioHighFace.szs",
-                "MarioEye.szs", "MarioHighEye.szs", "MarioHead.szs", "MarioHighHead.szs",
-                "MarioHeadTexture.szs", "MarioCap.szs", "MarioHighCap.szs", "MarioCapTexture.szs",
-                "MarioUnder.szs", "MarioHandL.szs", "MarioHandR.szs", "MarioHandTexture.szs"
-            }
-            if os.path.isdir(obj_dir):
-                for mfn in protected_mario:
-                    mp = os.path.join(obj_dir, mfn)
-                    if os.path.isfile(mp):
-                        os.makedirs(skip_dir, exist_ok=True)
-                        shutil.move(mp, os.path.join(skip_dir, mfn))
+        # 2b. Move any bundled Mario face, eyes, head, or body models aside so they never
+        # override the user's custom Clara face, authentic eyes, outfit, or Tiny/Giant scale.
+        obj_dir = os.path.join(pack_dir, "romfs", "ObjectData")
+        skip_dir = os.path.join(pack_dir, "romfs", "_skipped_mario_models")
+        protected_mario = {
+            "Mario.szs", "MarioHigh.szs", "MarioFace.szs", "MarioHighFace.szs",
+            "MarioEye.szs", "MarioHighEye.szs", "MarioHead.szs", "MarioHighHead.szs",
+            "MarioHeadTexture.szs", "MarioCap.szs", "MarioHighCap.szs", "MarioCapTexture.szs",
+            "MarioUnder.szs", "MarioHandL.szs", "MarioHandR.szs", "MarioHandTexture.szs"
+        }
+        if os.path.isdir(obj_dir):
+            for mfn in protected_mario:
+                mp = os.path.join(obj_dir, mfn)
+                if os.path.isfile(mp):
+                    os.makedirs(skip_dir, exist_ok=True)
+                    shutil.move(mp, os.path.join(skip_dir, mfn))
 
         # 2c. Remove incompatible exefs like subsdk4 (requires pm:shell / causes Launching... freeze)
         exefs_dir = os.path.join(pack_dir, "exefs")
