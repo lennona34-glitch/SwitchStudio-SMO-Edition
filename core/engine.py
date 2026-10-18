@@ -2123,6 +2123,41 @@ class SwitchEngine:
         elif not any_active_pack_has_exefs and os.path.isdir(lk_disabled) and not os.path.isdir(lk_active):
             shutil.move(lk_disabled, lk_active)
 
+        # Handle Character Skin / Player Model collision with Clara face
+        clara_obj = os.path.join(EDEN_LOAD_DIR, self.active_mod_name, "romfs", "ObjectData")
+        clara_face_bak = os.path.join(clara_obj, "_clara_face_backup")
+        pack_obj = os.path.join(pack_dir, "romfs", "ObjectData")
+        
+        pack_has_mario = False
+        if os.path.isdir(pack_obj):
+            for fn in os.listdir(pack_obj):
+                if fn.startswith("Mario") and fn.endswith(".szs"):
+                    pack_has_mario = True
+                    break
+
+        if pack_has_mario:
+            if enabled:
+                # Temporarily back up Clara face so the character skin has 100% priority
+                if os.path.isdir(clara_obj):
+                    os.makedirs(clara_face_bak, exist_ok=True)
+                    for fn in ("MarioFace.szs", "MarioHighFace.szs"):
+                        cf = os.path.join(clara_obj, fn)
+                        bf = os.path.join(clara_face_bak, fn)
+                        if os.path.isfile(cf):
+                            shutil.move(cf, bf)
+            else:
+                # Restore Clara face when character skin is disabled
+                if os.path.isdir(clara_face_bak):
+                    for fn in os.listdir(clara_face_bak):
+                        if fn.endswith(".szs"):
+                            bf = os.path.join(clara_face_bak, fn)
+                            cf = os.path.join(clara_obj, fn)
+                            shutil.move(bf, cf)
+                    try:
+                        shutil.rmtree(clara_face_bak, ignore_errors=True)
+                    except Exception:
+                        pass
+
     def _apply_bps(self, source, patch):
         def decode_vli(data, offset):
             res = 0; shift = 0
@@ -2264,22 +2299,39 @@ class SwitchEngine:
                 except Exception as e:
                     print(f"Warning normalizing {fn}: {e}")
 
-        # 2b. Move any bundled Mario face, eyes, head, or body models aside so they never
-        # override the user's custom Clara face, authentic eyes, outfit, or Tiny/Giant scale.
+        # 2b. Only protect Mario's eyes/face for Stage/Texture overhaul packs (like RecreatingEveryTexture)
+        # NEVER strip models if the pack is a Character Skin or Player Model replacement!
         obj_dir = os.path.join(pack_dir, "romfs", "ObjectData")
         skip_dir = os.path.join(pack_dir, "romfs", "_skipped_mario_models")
-        protected_mario = {
-            "Mario.szs", "MarioHigh.szs", "MarioFace.szs", "MarioHighFace.szs",
-            "MarioEye.szs", "MarioHighEye.szs", "MarioHead.szs", "MarioHighHead.szs",
-            "MarioHeadTexture.szs", "MarioCap.szs", "MarioHighCap.szs", "MarioCapTexture.szs",
-            "MarioUnder.szs", "MarioHandL.szs", "MarioHandR.szs", "MarioHandTexture.szs"
-        }
-        if os.path.isdir(obj_dir):
-            for mfn in protected_mario:
-                mp = os.path.join(obj_dir, mfn)
-                if os.path.isfile(mp):
-                    os.makedirs(skip_dir, exist_ok=True)
-                    shutil.move(mp, os.path.join(skip_dir, mfn))
+        pack_name_l = os.path.basename(pack_dir).lower()
+        has_stage_data = os.path.isdir(os.path.join(pack_dir, "romfs", "StageData"))
+        has_world_list = os.path.isfile(os.path.join(pack_dir, "romfs", "SystemData", "WorldList.szs"))
+        is_skin_mod = any(k in pack_name_l for k in ("steve", "skin", "playable", "overmario", "over mario", "character", "costume", "model", "kirby", "spongebob", "sonic", "luigi", "peach", "toad")) or (not has_stage_data and not has_world_list)
+
+        if is_skin_mod:
+            # If any models were previously skipped in this skin mod, restore them back to ObjectData!
+            if os.path.isdir(skip_dir) and os.path.isdir(obj_dir):
+                for mfn in os.listdir(skip_dir):
+                    if mfn.endswith(".szs"):
+                        shutil.move(os.path.join(skip_dir, mfn), os.path.join(obj_dir, mfn))
+                try:
+                    shutil.rmtree(skip_dir, ignore_errors=True)
+                except Exception:
+                    pass
+        else:
+            # Stage / Texture overhauls: skip bundled player models so custom face/eyes stay pristine
+            protected_mario = {
+                "Mario.szs", "MarioHigh.szs", "MarioFace.szs", "MarioHighFace.szs",
+                "MarioEye.szs", "MarioHighEye.szs", "MarioHead.szs", "MarioHighHead.szs",
+                "MarioHeadTexture.szs", "MarioCap.szs", "MarioHighCap.szs", "MarioCapTexture.szs",
+                "MarioUnder.szs", "MarioHandL.szs", "MarioHandR.szs", "MarioHandTexture.szs"
+            }
+            if os.path.isdir(obj_dir):
+                for mfn in protected_mario:
+                    mp = os.path.join(obj_dir, mfn)
+                    if os.path.isfile(mp):
+                        os.makedirs(skip_dir, exist_ok=True)
+                        shutil.move(mp, os.path.join(skip_dir, mfn))
 
         # 2c. Remove incompatible exefs like subsdk4 (requires pm:shell / causes Launching... freeze)
         exefs_dir = os.path.join(pack_dir, "exefs")
