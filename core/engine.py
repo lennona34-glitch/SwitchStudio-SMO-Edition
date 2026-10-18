@@ -2586,24 +2586,99 @@ class SwitchEngine:
             self._save_community_metadata(meta_db)
         return results
 
+    def _get_pack_capabilities(self, pack_id):
+        """Analyzes a pack's folder to detect its category:
+        - is_kingdom: replaces WorldList.szs or StageData (custom 3D stages/levels)
+        - is_skin: contains Mario player models in ObjectData (Mario.szs, etc.)
+        - is_texture: full texture replacement pack (RecreatingEveryTexture)
+        - has_subsdk9: contains exefs/subsdk9
+        """
+        active_p = os.path.join(EDEN_LOAD_DIR, pack_id)
+        dis_p = os.path.join(self._eden_disabled_dir(), pack_id)
+        root = active_p if os.path.isdir(active_p) else dis_p
+        if not os.path.isdir(root):
+            return {"is_kingdom": False, "is_skin": False, "is_texture": False, "has_subsdk9": False}
+
+        romfs = os.path.join(root, "romfs")
+        exefs = os.path.join(root, "exefs")
+        
+        has_worldlist = os.path.isfile(os.path.join(romfs, "SystemData", "WorldList.szs")) if os.path.isdir(romfs) else False
+        has_stagedata = os.path.isdir(os.path.join(romfs, "StageData")) if os.path.isdir(romfs) else False
+        
+        has_mario_skin = False
+        obj = os.path.join(romfs, "ObjectData")
+        if os.path.isdir(obj):
+            for f in ("Mario.szs", "MarioFace.szs", "MarioHead.szs", "MarioEye.szs"):
+                if os.path.isfile(os.path.join(obj, f)):
+                    has_mario_skin = True
+                    break
+
+        is_texture = (pack_id == "RecreatingEveryTexture") or ("texture" in pack_id.lower())
+        has_subsdk9 = os.path.isfile(os.path.join(exefs, "subsdk9")) if os.path.isdir(exefs) else False
+
+        known_kingdoms = {
+            "WuhuKingdom", "YoshiStarKingdom", "OdysseyKingdomsExpansion", "FluffyBluffKingdom",
+            "KingdomPass", "EmeraldCoast", "BeyondJourneysEnd", "TreetrunkMeadow", "chaoscontrolDimension",
+            "SuperMINECRAFTOdyssey", "MarioKartinSuperMarioOdyssey"
+        }
+        is_kingdom = has_worldlist or has_stagedata or (pack_id in known_kingdoms)
+
+        return {
+            "is_kingdom": is_kingdom,
+            "is_skin": has_mario_skin,
+            "is_texture": is_texture,
+            "has_subsdk9": has_subsdk9
+        }
+
     def _disable_other_kingdom_packs(self, target_pack_id):
-        """Automatically disables any other active community pack so texture packs, WorldList.szs, ShineInfo.szs, and exefs never conflict or overflow RAM."""
+        """Intelligently disables ONLY packs that conflict with the newly enabled pack:
+        - If target is a Kingdom Map: disables only other Kingdom Maps
+        - If target is a Character Skin: disables only other Character Skins
+        - If target has subsdk9: disables only other subsdk9 mods
+        - If target is a Texture Pack: disables only other Texture Packs
+        Non-conflicting mods (e.g. Minecraft Steve + Recreating Every Texture + Cheats) remain enabled together!
+        """
         disabled_names = []
         if not os.path.isdir(EDEN_LOAD_DIR):
             return disabled_names
+
+        target_caps = self._get_pack_capabilities(target_pack_id)
         dis_root = self._eden_disabled_dir()
+
         for dname in sorted(os.listdir(EDEN_LOAD_DIR)):
-            if dname in (target_pack_id, self.active_mod_name, "LunaKit", "Cheats"):
+            if dname in (target_pack_id, self.active_mod_name, "Cheats"):
                 continue
             src_p = os.path.join(EDEN_LOAD_DIR, dname)
             if not os.path.isdir(src_p):
                 continue
-            dst_p = os.path.join(dis_root, dname)
-            if os.path.isdir(dst_p):
-                shutil.rmtree(dst_p)
-            shutil.move(src_p, dst_p)
-            self._sync_pack_audio_and_exefs(dname, False)
-            disabled_names.append(dname)
+
+            dname_caps = self._get_pack_capabilities(dname)
+            conflicts = False
+
+            # 1. Kingdom vs Kingdom conflict
+            if target_caps["is_kingdom"] and dname_caps["is_kingdom"]:
+                conflicts = True
+
+            # 2. Skin vs Skin conflict
+            if target_caps["is_skin"] and dname_caps["is_skin"]:
+                conflicts = True
+
+            # 3. Texture Pack vs Texture Pack conflict
+            if target_caps["is_texture"] and dname_caps["is_texture"]:
+                conflicts = True
+
+            # 4. ExeFS subsdk9 collision (e.g. LunaKit vs SMOInterp)
+            if target_caps["has_subsdk9"] and dname_caps["has_subsdk9"]:
+                conflicts = True
+
+            if conflicts:
+                dst_p = os.path.join(dis_root, dname)
+                if os.path.isdir(dst_p):
+                    shutil.rmtree(dst_p)
+                shutil.move(src_p, dst_p)
+                self._sync_pack_audio_and_exefs(dname, False)
+                disabled_names.append(dname)
+
         return disabled_names
 
     def get_download_progress(self):
@@ -2619,7 +2694,7 @@ class SwitchEngine:
                 shutil.move(dis_path, active_path)
             elif not os.path.isdir(active_path):
                 raise FileNotFoundError(f"Pack '{pack_id}' is not installed yet.")
-            # Auto-disable all other active community packs so texture packs & 3D kingdoms never collide
+            # Auto-disable ONLY conflicting packs (e.g. other skins, other kingdoms)
             auto_off = self._disable_other_kingdom_packs(pack_id)
             self._sync_pack_audio_and_exefs(pack_id, True)
             extra_note = f" (Auto-disabled {', '.join(auto_off)})" if auto_off else ""
