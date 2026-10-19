@@ -2305,8 +2305,8 @@ class SwitchEngine:
         skip_dir = os.path.join(pack_dir, "romfs", "_skipped_mario_models")
         pack_name_l = os.path.basename(pack_dir).lower()
         has_stage_data = os.path.isdir(os.path.join(pack_dir, "romfs", "StageData"))
-        has_world_list = os.path.isfile(os.path.join(pack_dir, "romfs", "SystemData", "WorldList.szs"))
-        is_skin_mod = any(k in pack_name_l for k in ("steve", "skin", "playable", "overmario", "over mario", "character", "costume", "model", "kirby", "spongebob", "sonic", "luigi", "peach", "toad")) or (not has_stage_data and not has_world_list)
+        is_texture_pack = "texture" in pack_name_l or "recreating" in pack_name_l
+        is_skin_mod = not is_texture_pack and (any(k in pack_name_l for k in ("steve", "skin", "playable", "overmario", "over mario", "character", "costume", "model", "kirby", "spongebob", "sonic", "luigi", "peach", "toad")) or (not has_stage_data and not has_world_list))
 
         if is_skin_mod:
             # If any models were previously skipped in this skin mod, restore them back to ObjectData!
