@@ -2318,6 +2318,24 @@ class SwitchEngine:
                     shutil.rmtree(skip_dir, ignore_errors=True)
                 except Exception:
                     pass
+            # Repair SuperSpongeBobOdyssey shifted bone weights (_i0/_w0) & 59-bone InverseModelMatrices in-place at 0x4000
+            sb_mario_szs = os.path.join(obj_dir, "Mario.szs")
+            zdelta_path = os.path.join(STUDIO_ROOT, "switch_studio", "config", "spongebob_rig_fix.zdelta")
+            if "spongebob" in pack_name_l and os.path.isfile(sb_mario_szs) and os.path.isfile(zdelta_path):
+                try:
+                    import zlib
+                    raw_sb = open(sb_mario_szs, "rb").read()
+                    dec_sb = bytearray(oead.yaz0.decompress(raw_sb))
+                    if dec_sb[0x4000:0x4004] == b"FRES" and len(dec_sb) >= 0x4000 + 0xAF208:
+                        cur_bfres = bytes(dec_sb[0x4000 : 0x4000 + 0xAF208])
+                        if hashlib.sha256(cur_bfres).hexdigest().startswith("35b60edeb7a0de6f"):
+                            xor_delta = zlib.decompress(open(zdelta_path, "rb").read())
+                            fixed_bfres = bytes(a ^ b for a, b in zip(cur_bfres, xor_delta))
+                            dec_sb[0x4000 : 0x4000 + 0xAF208] = fixed_bfres
+                            comp_sb = bytearray(oead.yaz0.compress(dec_sb, data_alignment=0x2000, level=7))
+                            open(sb_mario_szs, "wb").write(comp_sb)
+                except Exception as e:
+                    print(f"Warning applying SpongeBob rig fix: {e}")
         else:
             # Stage / Texture overhauls: skip bundled player models so custom face/eyes stay pristine
             protected_mario = {
