@@ -2297,6 +2297,80 @@ body.zen-maximized .tab-pane {
 }
 
 /* ========================================================
+   CUTE KID & FACE STYLE TOGGLES
+======================================================== */
+.kid-style-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 10px 4px;
+}
+
+.kid-toggle-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.btn-face-style {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: #101726;
+    border: 1px solid #23304c;
+    border-radius: 8px;
+    padding: 14px 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.btn-face-style:hover {
+    border-color: var(--neon-blue);
+    background: #162036;
+}
+
+.btn-face-style.active {
+    background: linear-gradient(135deg, rgba(0, 210, 255, 0.2), rgba(59, 130, 246, 0.25));
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 12px rgba(0, 210, 255, 0.25);
+}
+
+.face-style-icon {
+    font-size: 28px;
+    line-height: 1;
+}
+
+.face-style-info strong {
+    display: block;
+    font-size: 12px;
+    color: #f1f5f9;
+    margin-bottom: 2px;
+}
+
+.face-style-info span {
+    display: block;
+    font-size: 10px;
+    color: #94a3b8;
+    line-height: 1.25;
+}
+
+.kid-combo-banner {
+    background: rgba(168, 85, 247, 0.08);
+    border: 1px dashed rgba(168, 85, 247, 0.35);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.kid-combo-banner .combo-desc {
+    font-size: 11px;
+    color: #e2e8f0;
+    line-height: 1.4;
+}
+
+/* ========================================================
    COMMUNITY PACKS (GAMEBANANA BROWSER & 1-CLICK INSTALLER)
 ======================================================== */
 #tab-community.active {

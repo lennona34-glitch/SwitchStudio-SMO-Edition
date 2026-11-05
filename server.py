@@ -635,6 +635,18 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
                 self.send_json({"success": False, "error": str(e)}, code=500)
             return
 
+        elif path == "/api/mario/face_style":
+            try:
+                req = json.loads(body.decode("utf-8")) if body else {}
+                cute_kid = bool(req.get("cute_kid", False))
+                res = engine.apply_mario_face_style(cute_kid=cute_kid)
+                self.send_json(res)
+            except PermissionError:
+                self.send_json({"success": False, "error": "Eden has MarioFace.szs open — close Eden briefly to apply face style, then relaunch!"}, code=500)
+            except Exception as e:
+                self.send_json({"success": False, "error": str(e)}, code=500)
+            return
+
         elif path == "/api/community/toggle":
             try:
                 req = json.loads(body.decode("utf-8")) if body else {}

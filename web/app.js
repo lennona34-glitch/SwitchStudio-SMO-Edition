@@ -451,41 +451,46 @@ function initTextureControls() {
     [sHue, sSat, sVal].forEach(el => el.addEventListener("input", liveRecolor));
     cInv.addEventListener("change", liveRecolor);
 
-    // Photo Drop Zone
+    // Photo Drop Zone & Sliders (Guarded)
     const dropZone = document.getElementById("dropZone");
     const fileInput = document.getElementById("fileInput");
 
-    dropZone.addEventListener("click", () => fileInput.click());
-    dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.style.borderColor = "var(--neon-blue)"; });
-    dropZone.addEventListener("dragleave", () => { dropZone.style.borderColor = ""; });
-    dropZone.addEventListener("drop", (e) => {
-        e.preventDefault();
-        dropZone.style.borderColor = "";
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            handleUploadedPhoto(e.dataTransfer.files[0]);
-        }
-    });
-    fileInput.addEventListener("change", () => {
-        if (fileInput.files && fileInput.files[0]) {
-            handleUploadedPhoto(fileInput.files[0]);
-        }
-    });
+    if (dropZone && fileInput) {
+        dropZone.addEventListener("click", () => fileInput.click());
+        dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.style.borderColor = "var(--neon-blue)"; });
+        dropZone.addEventListener("dragleave", () => { dropZone.style.borderColor = ""; });
+        dropZone.addEventListener("drop", (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = "";
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                handleUploadedPhoto(e.dataTransfer.files[0]);
+            }
+        });
+        fileInput.addEventListener("change", () => {
+            if (fileInput.files && fileInput.files[0]) {
+                handleUploadedPhoto(fileInput.files[0]);
+            }
+        });
+    }
 
-    // Sliders for Photo
     const sScale = document.getElementById("sliderScale");
     const sFeather = document.getElementById("sliderFeather");
     const sOpacity = document.getElementById("sliderOpacity");
-    sScale.addEventListener("input", () => document.getElementById("valScale").textContent = `${parseFloat(sScale.value).toFixed(2)}x`);
-    sFeather.addEventListener("input", () => document.getElementById("valFeather").textContent = `${sFeather.value}px`);
-    sOpacity.addEventListener("input", () => document.getElementById("valOpacity").textContent = `${Math.round(sOpacity.value * 100)}%`);
+    if (sScale) sScale.addEventListener("input", () => document.getElementById("valScale").textContent = `${parseFloat(sScale.value).toFixed(2)}x`);
+    if (sFeather) sFeather.addEventListener("input", () => document.getElementById("valFeather").textContent = `${sFeather.value}px`);
+    if (sOpacity) sOpacity.addEventListener("input", () => document.getElementById("valOpacity").textContent = `${Math.round(sOpacity.value * 100)}%`);
 
     const liveComposite = debounce(() => { if (uploadedTextureFile) applyComposite(true); }, 250);
     ["sliderScale", "sliderFeather", "sliderOpacity", "sliderOffX", "sliderOffY", "sliderRotate"].forEach(id => {
-        document.getElementById(id).addEventListener("input", () => { liveComposite(); drawUVOverlays(); });
+        const el = document.getElementById(id);
+        if (el) el.addEventListener("input", () => { liveComposite(); drawUVOverlays(); });
     });
-    document.getElementById("sliderRotate").addEventListener("input", (e) => {
-        document.getElementById("valRotate").textContent = `${e.target.value}°`;
-    });
+    const sRotate = document.getElementById("sliderRotate");
+    if (sRotate) {
+        sRotate.addEventListener("input", (e) => {
+            document.getElementById("valRotate").textContent = `${e.target.value}°`;
+        });
+    }
     initUVOverlay();
 
     // Commit / Swizzle NVN
@@ -669,8 +674,10 @@ function initUVOverlay() {
 
 function setPlacement(offX, offY) {
     const clamp = (v) => Math.max(-256, Math.min(256, Math.round(v)));
-    document.getElementById("sliderOffX").value = clamp(offX);
-    document.getElementById("sliderOffY").value = clamp(offY);
+    const elX = document.getElementById("sliderOffX");
+    const elY = document.getElementById("sliderOffY");
+    if (elX) elX.value = clamp(offX);
+    if (elY) elY.value = clamp(offY);
     drawUVOverlays();
     if (uploadedTextureFile) applyComposite(true);
 }
@@ -1062,56 +1069,76 @@ async function handleUploadedPhoto(file) {
     }
 }
 
+async function setMarioFaceStyle(cuteKid) {
+    hideFaceParts = !!cuteKid;
+    const btnCuteKid = document.getElementById("btnFaceCuteKid");
+    const btnClassic = document.getElementById("btnFaceClassic");
+    if (btnCuteKid) btnCuteKid.classList.toggle("active", hideFaceParts);
+    if (btnClassic) btnClassic.classList.toggle("active", !hideFaceParts);
+
+    // Update 3D viewport immediately
+    if (activeMesh && activeMeshIsReal) {
+        loadMesh(document.getElementById("modelMeshSelect").value);
+    }
+
+    try {
+        const res = await fetch("/api/mario/face_style", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ cute_kid: hideFaceParts })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(data.message || (hideFaceParts ? "🧒 Activated Cute Kid Mario!" : "👨 Restored Classic Mario!"));
+        } else {
+            showToast("⚠️ " + (data.error || "Could not apply face style"));
+        }
+    } catch (err) {
+        console.error("Error setting face style:", err);
+    }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
-    // opening the photo tool selects the face texture too, so what you drop lands where you expect
-    document.querySelector('.tool-pill[data-tool="composite"]').addEventListener("click", () => {
-        if (activeSlotId !== "mario_face") selectSlot("mario_face");
-    });
+    // Select face texture when switching to Face Style tab
+    const pill = document.querySelector('.tool-pill[data-tool="facestyle"]');
+    if (pill) {
+        pill.addEventListener("click", () => {
+            if (activeSlotId !== "mario_face") selectSlot("mario_face");
+        });
+    }
+
     try {
         const st = await (await fetch("/api/settings")).json();
         hideFaceParts = !!st.hide_face_parts;
-        document.getElementById("checkHideParts").checked = hideFaceParts;
-        const pct = Math.round((st.reshape_strength ?? 0) * 100);
-        document.getElementById("sliderReshape").value = pct;
-        document.getElementById("valReshape").textContent = `${pct}%`;
-        document.getElementById("rowReshape").style.display = st.has_face_depth ? "" : "none";
+        const btnCuteKid = document.getElementById("btnFaceCuteKid");
+        const btnClassic = document.getElementById("btnFaceClassic");
+        if (btnCuteKid) btnCuteKid.classList.toggle("active", hideFaceParts);
+        if (btnClassic) btnClassic.classList.toggle("active", !hideFaceParts);
         if (activeMesh && activeMeshIsReal) loadMesh(document.getElementById("modelMeshSelect").value);
-    } catch (e) { console.error(e); }
-    document.getElementById("checkHideParts").addEventListener("change", async (e) => {
-        hideFaceParts = e.target.checked;
-        try {
-            await fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" },
-                                           body: JSON.stringify({ hide_face_parts: hideFaceParts }) });
-        } catch (err) { console.error(err); }
-        loadMesh(document.getElementById("modelMeshSelect").value);
-        showToast(hideFaceParts ? "Moustache & eyebrows removed - press Swizzle & Deploy to apply in game." :
-                                  "Moustache & eyebrows kept - press Swizzle & Deploy to apply in game.");
-    });
-    const saveReshape = debounce(async (v) => {
-        try {
-            await fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" },
-                                           body: JSON.stringify({ reshape_strength: v / 100 }) });
-        } catch (err) { console.error(err); }
-        reloadSceneForReshape();
-    }, 300);
-    document.getElementById("sliderReshape").addEventListener("input", (e) => {
-        document.getElementById("valReshape").textContent = `${e.target.value}%`;
-        saveReshape(parseFloat(e.target.value));
-    });
-    const liveBright = debounce(rerenderAligned, 250);
-    document.getElementById("sliderFlat").addEventListener("input", (e) => {
-        document.getElementById("valFlat").textContent = `${e.target.value}%`;
-        liveBright();
-    });
-    document.getElementById("sliderBright").addEventListener("input", (e) => {
-        const v = parseInt(e.target.value, 10);
-        document.getElementById("valBright").textContent = v === 0 ? "auto" : (v > 0 ? "+" : "") + v + "%";
-        liveBright();
-    });
-    document.getElementById("btnResetAlign").addEventListener("click", () => {
-        if (uploadedOriginalFile) handleUploadedPhoto(uploadedOriginalFile);
-        else showToast("Drop a portrait first.");
-    });
+    } catch (e) {
+        console.error(e);
+    }
+
+    const btnCuteKid = document.getElementById("btnFaceCuteKid");
+    const btnClassic = document.getElementById("btnFaceClassic");
+    if (btnCuteKid) {
+        btnCuteKid.addEventListener("click", () => setMarioFaceStyle(true));
+    }
+    if (btnClassic) {
+        btnClassic.addEventListener("click", () => setMarioFaceStyle(false));
+    }
+
+    const btnCombo = document.getElementById("btnActivateCuteKidCombo");
+    if (btnCombo) {
+        btnCombo.addEventListener("click", async () => {
+            await setMarioFaceStyle(true);
+            const chibiBtn = document.querySelector('.btn-scale-preset[data-scale-preset="chibi"]');
+            if (chibiBtn) {
+                chibiBtn.click();
+            }
+            showToast("✨ Activated Cute Kid + Chibi Combo! (0.68x Child Size + Clean-Shaven Face)");
+        });
+    }
 });
 
 // ========================================================

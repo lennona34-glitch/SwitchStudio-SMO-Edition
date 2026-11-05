@@ -1967,6 +1967,32 @@ class SwitchEngine:
         state["message"] = msg
         return state
 
+    def apply_mario_face_style(self, cute_kid=False):
+        """Toggles between Cute Kid Mario (clean-shaven, no mustache & eyebrows) and Classic Mario."""
+        cute_kid = bool(cute_kid)
+        self.settings["hide_face_parts"] = cute_kid
+        self.save_settings()
+
+        deployed_dir = os.path.join(EDEN_LOAD_DIR, self.active_mod_name, "romfs", "ObjectData")
+        if not cute_kid and not self._slot_is_edited("mario_face") and not self._slot_is_edited("mario_hair") and not bool(self.reshape_signature()):
+            for a in ("MarioFace.szs", "MarioHighFace.szs"):
+                fp = os.path.join(deployed_dir, a)
+                if os.path.isfile(fp):
+                    try:
+                        os.remove(fp)
+                    except OSError:
+                        pass
+            msg = "Restored Classic Mario face (original mustache & eyebrows)!"
+        else:
+            self.commit_texture_to_model("mario_face")
+            msg = "Activated Cute Kid Mario (clean-shaven, no mustache & eyebrows)!" if cute_kid else "Restored Classic Mario face!"
+
+        return {
+            "success": True,
+            "cute_kid": cute_kid,
+            "message": msg
+        }
+
     # =========================================================================
     # COMMUNITY PACKS (GAMEBANANA) BROWSER, INSTALLER & TOGGLER
     # =========================================================================
@@ -2305,8 +2331,9 @@ class SwitchEngine:
         skip_dir = os.path.join(pack_dir, "romfs", "_skipped_mario_models")
         pack_name_l = os.path.basename(pack_dir).lower()
         has_stage_data = os.path.isdir(os.path.join(pack_dir, "romfs", "StageData"))
+        has_world_list = os.path.isfile(os.path.join(pack_dir, "romfs", "SystemData", "WorldList.szs"))
         is_texture_pack = "texture" in pack_name_l or "recreating" in pack_name_l
-        is_skin_mod = not is_texture_pack and (any(k in pack_name_l for k in ("steve", "skin", "playable", "overmario", "over mario", "character", "costume", "model", "kirby", "spongebob", "sonic", "luigi", "peach", "toad")) or (not has_stage_data and not has_world_list))
+        is_skin_mod = not is_texture_pack and (any(k in pack_name_l for k in ("steve", "skin", "playable", "overmario", "over mario", "character", "costume", "model", "kirby", "spongebob", "sonic", "luigi", "peach", "toad", "bowser")) or (not has_stage_data and not has_world_list))
 
         if is_skin_mod:
             # If any models were previously skipped in this skin mod, restore them back to ObjectData!
